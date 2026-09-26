@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CORBEAU - Gagné avec ton tel</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0a0a0a] text-white min-h-screen">
+<div class="max-w-[400px] mx-auto p-4">
+<h1 class="text-4xl font-black mt-6">🦅 CORBEAU</h1>
+<p class="opacity-60 text-sm">Gagne avec ton téléphone</p>
+
+<div id="inscription" class="bg-zinc-900 rounded-[24px] p-6 mt-8">
+<h2 class="font-bold text-xl">Devenir Vendeur</h2>
+<input id="nom" placeholder="Ton nom complet" class="w-full bg-black border border-zinc-800 rounded-full px-4 py-3 mt-4 outline-none">
+<input id="wa" placeholder="Numéro WhatsApp" class="w-full bg-black border border-zinc-800 rounded-full px-4 py-3 mt-3 outline-none">
+<button onclick="inscrire()" class="w-full bg-white text-black font-black rounded-full py-3 mt-4">Créer mon code vendeur 🚀</button>
+<p id="msg" class="text-xs mt-3 text-center"></p>
+</div>
+
+<div id="dashboard" class="hidden">
+<div class="bg-zinc-900 rounded-[24px] p-6 mt-8">
+<p class="text-xs opacity-50">TON CODE</p>
+<p id="code" class="text-3xl font-black tracking-widest"></p>
+<p id="solde" class="mt-2 font-bold"></p>
+</div>
+<div class="grid grid-cols-2 gap-3 mt-4">
+<div class="bg-white text-black rounded-2xl p-4"><p class="text-xs">Mes Ventes</p><p id="ventes" class="text-2xl font-black">0</p></div>
+<div class="bg-zinc-900 rounded-2xl p-4"><p class="text-xs opacity-50">Commission</p><p id="com" class="text-2xl font-black">0 F</p></div>
+</div>
+<div class="bg-zinc-900 rounded-[24px] p-6 mt-4">
+<h3 class="font-bold">Produits à vendre</h3>
+<div id="prods" class="mt-3 space-y-2"></div>
+</div>
+</div>
+</div>
+
+<script>
+const SUPA_URL="https://nmkpanyeswafuchmvclj.supabase.co";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta3Bhbnllc3dhZnVjaG12Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTcxNTIsImV4cCI6MjEwNTkzMzE1Mn0.fleM-nhlLGteYjbdmWIlkzsgQS-zs3cf38-hTVBiKm8";
+const supa=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+const produits=[{nom:"Formation Canva",prix:5000,comm:2000},{nom:"Pack 1000 Templates",prix:3000,comm:1500},{nom:"Formation IA",prix:10000,comm:4000}];
+function genCode(){return "CRB"+Math.floor(1000+Math.random()*9000);}
+async function inscrire(){
+ let n=document.getElementById('nom').value, w=document.getElementById('wa').value;
+ if(!n||!w){document.getElementById('msg').innerText="Remplis tout Boss";return;}
+ let code=genCode();
+ document.getElementById('msg').innerText="Création...";
+ let {error}=await supa.from('corbeau_users').insert({nom:n,whatsapp:w,code_vendeur:code,solde:0});
+ if(error){document.getElementById('msg').innerText=error.message;return;}
+ localStorage.setItem('code',code); localStorage.setItem('nom',n); showDash(code);
+}
+function showDash(code){
+ document.getElementById('inscription').classList.add('hidden');
+ document.getElementById('dashboard').classList.remove('hidden');
+ document.getElementById('code').innerText=code;
+ document.getElementById('prods').innerHTML=produits.map(p=>`<div class="bg-black p-3 rounded-xl flex justify-between items-center"><div><b>${p.nom}</b><br><span class="text-xs opacity-50">${p.prix}F -> Toi: ${p.comm}F</span></div><button onclick="cmd('${p.nom}',${p.prix},${p.comm})" class="bg-white text-black px-3 py-1 rounded-full text-xs font-bold">Vendre</button></div>`).join('');
+ loadSolde(code);
+}
+async function loadSolde(code){
+ let {data}=await supa.from('corbeau_users').select('*').eq('code_vendeur',code).single();
+ if(data){document.getElementById('solde').innerText="Solde: "+(data.solde||0)+" F"; document.getElementById('com').innerText=(data.solde||0)+" F";}
+ let {data:v}=await supa.from('corbeau_ventes').select('*').eq('vendeur_code',code);
+ if(v) document.getElementById('ventes').innerText=v.length;
+}
+async function cmd(nom,prix,comm){
+ let cli=prompt("Nom du client?"); let w=prompt("WhatsApp client?");
+ if(!cli||!w) return;
+ await supa.from('corbeau_orders').insert({produit_nom:nom,prix,commission:comm,client_nom:cli,client_whatsapp:w,vendeur_code:localStorage.getItem('code'),vendeur_nom:localStorage.getItem('nom'),statut:'en_attente'});
+ alert("Commande envoyée au Boss! Tu recevras "+comm+"F après validation");
+}
+let c=localStorage.getItem('code'); if(c) showDash(c);
+</script>
+</body>
+</html>
