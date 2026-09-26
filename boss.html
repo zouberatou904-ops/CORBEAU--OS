@@ -1,40 +1,57 @@
 <!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BOSS - CORBEAU</title><script src="https://cdn.tailwindcss.com"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
-<body class="bg-black text-white min-h-screen"><div class="max-w-5xl mx-auto p-5">
-<h1 class="text-3xl font-black">🦅 BOSS DASHBOARD</h1><p class="text-zinc-500 mb-6">Vérification CNI + Commandes</p>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BOSS OS V3</title><script src="https://cdn.tailwindcss.com"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head>
+<body class="bg-[#080808] text-white min-h-screen"><div class="max-w-6xl mx-auto p-3">
+<div class="flex justify-between items-center my-3"><h1 class="text-2xl font-black">🦅 BOSS OS V3</h1><button onclick="location.reload()" class="bg-zinc-900 px-3 py-1.5 rounded-full text-xs">Refresh</button></div>
+<div class="flex gap-1.5 overflow-x-auto pb-2 mb-3 text-xs">
+<button onclick="showTab('verif')" id="bVerif" class="tab bg-white text-black px-3 py-2 rounded-full font-bold whitespace-nowrap">⏳ Vérif (<span id="countVerif">0</span>)</button>
+<button onclick="showTab('rapports')" id="bRapports" class="tab bg-zinc-900 px-3 py-2 rounded-full whitespace-nowrap">💰 Versements (<span id="countRapports">0</span>)</button>
+<button onclick="showTab('commandes')" id="bCommandes" class="tab bg-zinc-900 px-3 py-2 rounded-full whitespace-nowrap">📦 Commandes</button>
+<button onclick="showTab('support')" id="bSupport" class="tab bg-zinc-900 px-3 py-2 rounded-full whitespace-nowrap">🆘 Support (<span id="countSupport">0</span>)</button>
+<button onclick="showTab('annonces')" id="bAnnonces" class="tab bg-zinc-900 px-3 py-2 rounded-full whitespace-nowrap">📢 Annonces</button>
+<button onclick="showTab('projets')" id="bProjets" class="tab bg-zinc-900 px-3 py-2 rounded-full whitespace-nowrap">🚀 Projets</button>
+<button onclick="showTab('messages')" id="bMessages" class="tab bg-zinc-900 px-3 py-2 rounded-full whitespace-nowrap">💬 Messages</button>
+<button onclick="showTab('vendeurs')" id="bVendeurs" class="tab bg-zinc-900 px-3 py-2 rounded-full whitespace-nowrap">👥 Vendeurs</button>
+</div>
 
-<div class="grid md:grid-cols-2 gap-6">
-<div><h2 class="font-bold mb-3">⏳ À VÉRIFIER (<span id="countVerif">0</span>)</h2><div id="listVerif" class="space-y-4"></div></div>
-<div><h2 class="font-bold mb-3">📦 COMMANDES À VALIDER</h2><div id="listOrders" class="space-y-3"></div>
-<h2 class="font-bold mt-8 mb-3">✅ VENDEURS VÉRIFIÉS</h2><div id="listVerified" class="space-y-2"></div>
+<div id="tab-verif"><div id="listVerif" class="grid md:grid-cols-2 gap-3"></div></div>
+
+<div id="tab-rapports" class="hidden"><div id="listRapports" class="space-y-3"></div></div>
+<div id="tab-commandes" class="hidden"><div id="listOrders" class="space-y-2"></div></div>
+<div id="tab-support" class="hidden"><div id="listSupport" class="space-y-3"></div></div>
+
+<div id="tab-annonces" class="hidden">
+<div class="bg-zinc-900 rounded-2xl p-3 mb-3"><input id="annonceTitre" placeholder="Titre annonce" class="w-full bg-black border border-zinc-800 rounded-xl p-2.5 mb-2 text-sm"><textarea id="annonceContenu" placeholder="Contenu" class="w-full bg-black border border-zinc-800 rounded-xl p-2.5 mb-2 h-20 text-sm"></textarea><button onclick="creerAnnonce()" class="w-full bg-white text-black font-black py-2.5 rounded-xl text-sm">Publier Annonce</button></div><div id="listAnnonces" class="space-y-2"></div>
 </div>
+
+<div id="tab-projets" class="hidden">
+<div class="bg-zinc-900 rounded-2xl p-3 mb-3"><input id="projetTitre" placeholder="Titre projet" class="w-full bg-black border border-zinc-800 rounded-xl p-2.5 mb-2 text-sm"><textarea id="projetDesc" placeholder="Description mission" class="w-full bg-black border border-zinc-800 rounded-xl p-2.5 mb-2 h-20 text-sm"></textarea><input id="projetBudget" placeholder="Budget ex: 3000F/vente" class="w-full bg-black border border-zinc-800 rounded-xl p-2.5 mb-2 text-sm"><button onclick="creerProjet()" class="w-full bg-white text-black font-black py-2.5 rounded-xl text-sm">Publier Projet</button></div><div id="listProjets" class="space-y-2"></div>
 </div>
+
+<div id="tab-messages" class="hidden">
+<div class="bg-zinc-900 rounded-2xl p-3 mb-3"><input id="msgCode" placeholder="Code vendeur ou TOUS" class="w-full bg-black border border-zinc-800 rounded-xl p-2.5 mb-2 text-sm"><textarea id="msgContenu" placeholder="Message..." class="w-full bg-black border border-zinc-800 rounded-xl p-2.5 h-20 mb-2 text-sm"></textarea><button onclick="envoyerMessage()" class="w-full bg-white text-black font-black py-2.5 rounded-xl text-sm">Envoyer</button></div><div id="listMessages" class="space-y-2"></div>
+</div>
+
+<div id="tab-vendeurs" class="hidden"><div id="listVerified" class="space-y-2"></div></div>
 </div>
 <script>
-const SUPA_URL="https://nmkpanyeswafuchmvclj.supabase.co";
-const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta3Bhbnllc3dhZnVjaG12Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTcxNTIsImV4cCI6MjEwNTkzMzE1Mn0.fleM-nhlLGteYjbdmWIlkzsgQS-zs3cf38-hTVBiKm8";
-const supa=supabase.createClient(SUPA_URL,SUPA_KEY);
-async function loadVerif(){
- const {data}=await supa.from('corbeau_users').select('*').eq('statut_verif','en_attente').order('created_at',{ascending:false});
- document.getElementById('countVerif').innerText=data?.length||0;
- document.getElementById('listVerif').innerHTML=(data||[]).map(u=>`
- <div class="bg-zinc-900 rounded-2xl p-4">
-  <p class="font-bold">${u.prenom} ${u.nom} - ${u.code_vendeur}</p><p class="text-xs text-zinc-500">${u.age} ans - ${u.classe} - WhatsApp: ${u.whatsapp}</p>
-  <div class="grid grid-cols-2 gap-2 mt-3"><div><p class="text-xs">CNI/Carte</p><img src="${u.photo_cni}" class="w-full rounded-xl mt-1"></div><div><p class="text-xs">Visage</p><img src="${u.photo_visage}" class="w-full rounded-xl mt-1"></div></div>
-  <div class="flex gap-2 mt-3"><button onclick="approuver('${u.code_vendeur}')" class="flex-1 bg-green-500 text-black font-black py-2 rounded-xl">✅ APPROUVER</button><button onclick="refuser('${u.code_vendeur}')" class="flex-1 bg-red-600 py-2 rounded-xl">❌ Refuser</button></div>
- </div>`).join('')||"<p class='text-zinc-600 text-sm'>Aucune demande</p>";
-}
-async function loadOrders(){
- const {data}=await supa.from('corbeau_orders').select('*').eq('statut','en_attente').order('created_at',{ascending:false});
- document.getElementById('listOrders').innerHTML=(data||[]).map(o=>`
- <div class="bg-zinc-900 rounded-2xl p-3 flex justify-between items-center"><div><p class="font-bold">${o.produit_nom} - ${o.prix}F</p><p class="text-xs text-zinc-400">Client: ${o.client_nom} (${o.client_whatsapp}) - Vendeur: ${o.vendeur_code}</p></div><button onclick="validerCommande('${o.id}','${o.vendeur_code}',${o.commission})" class="bg-white text-black px-3 py-1 rounded-full font-bold text-sm">Valider</button></div>`).join('')||"<p class='text-zinc-600 text-sm'>Aucune commande</p>";
-}
-async function loadVerified(){
- const {data}=await supa.from('corbeau_users').select('*').eq('statut_verif','verifie');
- document.getElementById('listVerified').innerHTML=(data||[]).map(u=>`<div class="bg-zinc-900 p-2 rounded-xl text-sm flex justify-between"><span>${u.prenom} ${u.nom} - ${u.code_vendeur} - ${u.solde}F</span><span class="text-green-400">✅</span></div>`).join('');
-}
-async function approuver(code){await supa.from('corbeau_users').update({statut_verif:'verifie'}).eq('code_vendeur',code); loadVerif(); loadVerified();}
-async function refuser(code){await supa.from('corbeau_users').update({statut_verif:'refuse'}).eq('code_vendeur',code); loadVerif();}
-async function validerCommande(id,codeVendeur,comm){await supa.from('corbeau_orders').update({statut:'valide'}).eq('id',id); const {data:u}=await supa.from('corbeau_users').eq('code_vendeur',codeVendeur).single(); await supa.from('corbeau_users').update({solde:(u.solde||0)+comm}).eq('code_vendeur',codeVendeur); await supa.from('corbeau_ventes').insert({order_id:id,vendeur_code:codeVendeur,vendeur_nom:u.nom,produit_nom:'',prix:0,commission:comm,statut:'valide'}); loadOrders(); loadVerified(); alert("Validé! +"+comm+"F pour "+codeVendeur);}
-loadVerif(); loadOrders(); loadVerified(); setInterval(()=>{loadVerif();loadOrders();},5000);
+const SUPA_URL="https://nmkpanyeswafuchmvclj.supabase.co"; const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta3Bhbnllc3dhZnVjaG12Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTcxNTIsImV4cCI6MjEwNTkzMzE1Mn0.fleM-nhlLGteYjbdmWIlkzsgQS-zs3cf38-hTVBiKm8"; const supa=supabase.createClient(SUPA_URL,SUPA_KEY);
+function showTab(t){document.querySelectorAll('[id^="tab-"]').forEach(e=>e.classList.add('hidden'));document.getElementById('tab-'+t).classList.remove('hidden');document.querySelectorAll('.tab').forEach(e=>e.className="tab bg-zinc-900 px-3 py-2 rounded-full whitespace-nowrap");document.getElementById('b'+t.charAt(0).toUpperCase()+t.slice(1)).className="tab bg-white text-black px-3 py-2 rounded-full font-bold whitespace-nowrap"; if(t==='verif')loadVerif(); if(t==='rapports')loadRapports(); if(t==='commandes')loadOrders(); if(t==='support')loadSupport(); if(t==='annonces')loadAnnonces(); if(t==='projets')loadProjets(); if(t==='messages')loadMessages(); if(t==='vendeurs')loadVerified();}
+async function loadVerif(){const {data}=await supa.from('corbeau_users').select('*').eq('statut_verif','en_attente').order('created_at',{ascending:false});document.getElementById('countVerif').innerText=data?.length||0;document.getElementById('listVerif').innerHTML=(data||[]).map(u=>`<div class="bg-zinc-900 rounded-2xl p-3"><p class="font-bold text-sm">${u.prenom} ${u.nom} - ${u.code_vendeur}</p><p class="text-[11px] text-zinc-500">${u.classe} - ${u.whatsapp}</p><div class="grid grid-cols-2 gap-2 mt-2"><img src="${u.photo_cni}" class="rounded-xl"><img src="${u.photo_visage}" class="rounded-xl"></div><div class="flex gap-2 mt-2"><button onclick="approuver('${u.code_vendeur}')" class="flex-1 bg-green-500 text-black font-black py-2 rounded-xl text-sm">✅ APPROUVER</button><button onclick="refuser('${u.code_vendeur}')" class="flex-1 bg-red-600 py-2 rounded-xl text-sm">Refuser</button></div></div>`).join('')||"<p class='text-zinc-600 text-center py-10 text-sm'>Aucune demande</p>";}
+async function loadRapports(){const {data}=await supa.from('corbeau_rapports').select('*').eq('statut','en_attente').order('created_at',{ascending:false});document.getElementById('countRapports').innerText=data?.length||0;document.getElementById('listRapports').innerHTML=(data||[]).map(r=>`<div class="bg-zinc-900 rounded-2xl p-3"><div class="flex justify-between"><p class="font-bold text-sm">${r.vendeur_nom} (${r.vendeur_code})</p><span class="text-xs bg-yellow-500 text-black px-2 py-0.5 rounded-full">${r.methode}</span></div><p class="text-xs text-zinc-400 mt-1">Ventes: ${r.ventes_jour} - Encaissé: ${r.total_encaisse}F - À verser: ${r.a_verser_plateforme}F - Sa com: ${r.ma_commission}F</p>${r.numero_transaction?`<p class="text-xs mt-1">Transac: <span class="font-mono bg-black px-1 rounded">${r.numero_transaction}</span></p>`:''}<p class="text-[11px] text-zinc-600">${new Date(r.created_at).toLocaleString()}</p><div class="flex gap-2 mt-2"><button onclick="validerRapport('${r.id}')" class="flex-1 bg-green-500 text-black font-bold py-2 rounded-xl text-sm">✅ Reçu</button><button onclick="refuserRapport('${r.id}')" class="flex-1 bg-zinc-800 py-2 rounded-xl text-sm">❌ Pas reçu</button></div></div>`).join('')||"<p class='text-zinc-600 text-center py-10 text-sm'>Aucun versement en attente</p>";}
+async function loadSupport(){const {data}=await supa.from('corbeau_support').select('*').eq('statut','ouvert').order('created_at',{ascending:false});document.getElementById('countSupport').innerText=data?.length||0;document.getElementById('listSupport').innerHTML=(data||[]).map(s=>`<div class="bg-zinc-900 rounded-2xl p-3"><p class="font-bold text-sm">${s.vendeur_nom} (${s.vendeur_code}) - ${s.sujet}</p><p class="text-sm mt-1">${s.message}</p><p class="text-[11px] text-zinc-600 mt-1">${new Date(s.created_at).toLocaleString()}</p><div class="flex gap-2 mt-2"><input id="rep-${s.id}" placeholder="Ta réponse..." class="flex-1 bg-black border border-zinc-800 rounded-xl p-2 text-sm"><button onclick="repondreSupport('${s.id}')" class="bg-white text-black px-3 rounded-xl font-bold text-sm">Répondre</button></div></div>`).join('')||"<p class='text-zinc-600 text-center py-10 text-sm'>Aucun ticket support</p>";}
+async function repondreSupport(id){const rep=document.getElementById('rep-'+id).value; if(!rep) return alert("Écris réponse"); await supa.from('corbeau_support').update({reponse_boss:rep,statut:'repondu'}).eq('id',id); loadSupport();}
+async function validerRapport(id){await supa.from('corbeau_rapports').update({statut:'valide'}).eq('id',id); loadRapports();}
+async function refuserRapport(id){await supa.from('corbeau_rapports').update({statut:'refuse'}).eq('id',id); loadRapports();}
+async function loadOrders(){const {data}=await supa.from('corbeau_orders').select('*').eq('statut','en_attente').order('created_at',{ascending:false});document.getElementById('listOrders').innerHTML=(data||[]).map(o=>`<div class="bg-zinc-900 rounded-2xl p-3 flex justify-between items-center"><div><p class="font-bold text-sm">${o.produit_nom} - ${o.prix}F</p><p class="text-[11px] text-zinc-400">Client: ${o.client_nom} - Vendeur: ${o.vendeur_code}</p></div><button onclick="validerCommande('${o.id}','${o.vendeur_code}',${o.commission})" class="bg-white text-black px-3 py-1.5 rounded-full font-bold text-xs">Valider</button></div>`).join('')||"<p class='text-zinc-600 text-center py-10 text-sm'>Aucune commande</p>";}
+async function creerAnnonce(){const t=document.getElementById('annonceTitre').value,c=document.getElementById('annonceContenu').value; if(!t||!c) return alert("Remplis"); await supa.from('corbeau_annonces').insert({titre:t,contenu:c}); loadAnnonces(); alert("Annonce publiée!");}
+async function loadAnnonces(){const {data}=await supa.from('corbeau_annonces').select('*').order('created_at',{ascending:false});document.getElementById('listAnnonces').innerHTML=(data||[]).map(a=>`<div class="bg-zinc-900 p-3 rounded-2xl flex justify-between"><div><p class="font-bold text-sm">📢 ${a.titre}</p><p class="text-xs text-zinc-400">${a.contenu}</p></div><button onclick="supa.from('corbeau_annonces').delete().eq('id','${a.id}').then(()=>loadAnnonces())" class="text-xs text-zinc-600">X</button></div>`).join('');}
+async function creerProjet(){const t=document.getElementById('projetTitre').value,d=document.getElementById('projetDesc').value,b=document.getElementById('projetBudget').value; if(!t||!d) return alert("Remplis"); await supa.from('corbeau_projets').insert({titre:t,description:d,budget:b}); loadProjets(); alert("Projet publié!");}
+async function loadProjets(){const {data}=await supa.from('corbeau_projets').select('*').order('created_at',{ascending:false});document.getElementById('listProjets').innerHTML=(data||[]).map(p=>`<div class="bg-zinc-900 p-3 rounded-2xl"><p class="font-bold text-sm">🚀 ${p.titre}</p><p class="text-xs text-zinc-400">${p.description}</p><p class="text-xs mt-1"><span class="bg-white text-black px-2 py-0.5 rounded-full font-bold">${p.budget}</span></p></div>`).join('');}
+async function envoyerMessage(){const code=document.getElementById('msgCode').value,msg=document.getElementById('msgContenu').value; if(!code||!msg) return alert("Remplis"); await supa.from('corbeau_messages').insert({pour_code:code.toUpperCase(),pour_nom:code.toUpperCase(),message:msg}); document.getElementById('msgContenu').value=''; loadMessages(); alert("Envoyé!");}
+async function loadMessages(){const {data}=await supa.from('corbeau_messages').select('*').order('created_at',{ascending:false}).limit(30);document.getElementById('listMessages').innerHTML=(data||[]).map(m=>`<div class="bg-zinc-900 p-2.5 rounded-2xl text-sm"><span class="text-xs text-zinc-500">Pour ${m.pour_code}:</span> ${m.message}</div>`).join('');}
+async function loadVerified(){const {data}=await supa.from('corbeau_users').select('*').eq('statut_verif','verifie');document.getElementById('listVerified').innerHTML=(data||[]).map(u=>`<div class="bg-zinc-900 p-2.5 rounded-2xl text-sm flex justify-between"><span>${u.prenom} ${u.nom} - ${u.code_vendeur} - ${u.solde}F</span><span class="text-green-400">✅</span></div>`).join('');}
+async function approuver(c){await supa.from('corbeau_users').update({statut_verif:'verifie'}).eq('code_vendeur',c); loadVerif();}
+async function refuser(c){await supa.from('corbeau_users').update({statut_verif:'refuse'}).eq('code_vendeur',c); loadVerif();}
+async function validerCommande(id,code,comm){await supa.from('corbeau_orders').update({statut:'valide'}).eq('id',id); const {data:u}=await supa.from('corbeau_users').eq('code_vendeur',code).single(); await supa.from('corbeau_users').update({solde:(u.solde||0)+comm}).eq('code_vendeur',code); loadOrders();}
+loadVerif();
 </script></body></html>
