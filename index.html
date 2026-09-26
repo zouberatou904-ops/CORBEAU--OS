@@ -12,7 +12,7 @@
 <div id="app"></div>
 <script>
 const SUPA_URL="https://nmkpanyeswafuchmvclj.supabase.co";
-const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta3Bhbnllc3dhZnVjaG12Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTcxNTIsImV4cCI6MjEwNTkzMzE1Mn0.fleM-nhlLGteYjbdmWIlkzsgQS-zs3cf38-hTVBiKm8";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInRcCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta3Bhbnllc3dhZnVjaG12Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTcxNTIsImV4cCI6MjEwNTkzMzE1Mn0.fleM-nhlLGteYjbdmWIlkzsgQS-zs3cf38-hTVBiKm8";
 const supabase=window.supabase.createClient(SUPA_URL,SUPA_KEY);
 let currentUser=JSON.parse(localStorage.getItem('corbeau_user')||'null');
 let products=[];
