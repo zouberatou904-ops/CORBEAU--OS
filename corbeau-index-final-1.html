@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050607">
+<title>Corbeau — Inscription</title>
+<style>
+:root{
+  --bg:#030405; --panel:#0b0f13; --panel2:#0e141a; --line:#27313b;
+  --gold:#f5b928; --gold2:#ffd45a; --text:#f5f7fa; --muted:#9ca7b3;
+  --danger:#ff6b6b; --ok:#53d39a;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; color:var(--text); font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:
+    radial-gradient(circle at 78% 8%,rgba(245,185,40,.10),transparent 25%),
+    radial-gradient(circle at 20% 25%,rgba(100,90,40,.07),transparent 30%),
+    #030405;
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.container{width:min(1080px,94%);margin:auto}
+header{padding:24px 0 8px;position:relative;overflow:hidden}
+.header-glow{position:absolute;right:-100px;top:-180px;width:500px;height:500px;border-radius:50%;border:2px solid rgba(245,185,40,.18);box-shadow:0 0 100px rgba(245,185,40,.08);pointer-events:none}
+.brand{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
+.logo{
+  width:68px;height:68px;border-radius:50%;background:linear-gradient(145deg,#ffd34f,#d99500);
+  display:grid;place-items:center;box-shadow:0 0 30px rgba(245,185,40,.18);flex:none
+}
+.logo svg{width:46px;height:46px;fill:#050607}
+.brand-name{font-size:30px;letter-spacing:9px;font-weight:800}
+.tagline{margin-top:4px;color:#d7dce1;font-size:15px}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:20px;align-items:end;padding:28px 0 24px}
+.eyebrow{color:var(--gold);font-weight:800;letter-spacing:.5px;text-transform:uppercase;font-size:14px}
+h1{font-size:clamp(34px,5vw,58px);line-height:1.03;margin:10px 0 12px}
+h1 span{color:var(--gold)}
+.hero p{color:#c2cad2;font-size:17px;line-height:1.55;max-width:620px}
+.crow-art{height:250px;display:flex;justify-content:center;align-items:end;opacity:.96}
+.crow-art svg{height:245px;width:100%;max-width:420px;filter:drop-shadow(0 12px 30px rgba(0,0,0,.9))}
+.progress-wrap{position:sticky;top:0;z-index:20;background:rgba(3,4,5,.92);backdrop-filter:blur(14px);padding:12px 0;border-bottom:1px solid #151b20}
+.progress-head{display:flex;justify-content:space-between;color:#aeb7c0;font-size:13px;margin-bottom:8px}
+.progress{height:6px;background:#171d22;border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;width:11.11%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:99px;transition:.3s}
+.steps{display:flex;gap:5px;margin-top:9px}
+.steps b{height:4px;flex:1;border-radius:5px;background:#1c232a;transition:.25s}
+.steps b.active{background:var(--gold)}
+.form-card{
+  background:linear-gradient(145deg,rgba(13,18,23,.96),rgba(7,10,13,.96));
+  border:1px solid #242d35;border-radius:22px;padding:26px;margin:18px 0;
+  box-shadow:0 25px 70px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.025)
+}
+.screen{display:none;animation:fade .25s ease}.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.screen-title{display:flex;gap:15px;align-items:center;border-bottom:1px solid #20272e;padding-bottom:18px;margin-bottom:22px}
+.num{width:52px;height:52px;border-radius:14px;background:linear-gradient(145deg,#ffd65a,#e7a600);color:#090b0d;display:grid;place-items:center;font-size:20px;font-weight:900;flex:none}
+.screen-title h2{margin:0;font-size:21px}.screen-title p{margin:5px 0 0;color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.field{display:flex;flex-direction:column;gap:8px}.field.full{grid-column:1/-1}
+label{font-size:14px;color:#e5e9ed;font-weight:600}
+.req{color:#ff7676}
+input,select{
+  width:100%;height:52px;border:1px solid #303b46;border-radius:11px;background:#0c131a;color:#edf1f5;
+  padding:0 15px;outline:none;transition:.2s
+}
+input::placeholder{color:#71808d}
+input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,185,40,.10)}
+select option{background:#0b0f13}
+.choice-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.choice{
+  border:1px solid #303a44;background:#0b1218;border-radius:14px;padding:18px;display:flex;gap:14px;align-items:center;
+  color:#fff;text-align:left;transition:.2s
+}
+.choice:hover,.choice.selected{border-color:var(--gold);box-shadow:0 0 0 2px rgba(245,185,40,.10);background:#111920}
+.choice .ico{font-size:27px}.choice strong{display:block}.choice small{display:block;color:var(--muted);margin-top:4px;line-height:1.35}
+.choice input{display:none}
+.section-box{border:1px solid #303943;border-radius:15px;padding:18px;margin-top:20px;background:#090f14}
+.section-box.gold{border-left:4px solid var(--gold)}
+.section-box h3{margin:0 0 16px;font-size:16px}
+.upload{
+  border:1.5px dashed #46525d;border-radius:15px;min-height:150px;padding:22px;text-align:center;background:#090e13;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px
+}
+.upload:hover{border-color:var(--gold)}
+.upload input{display:none}.upload .big{font-size:34px}.upload p{margin:0;color:#aab4be}.upload span{color:var(--gold);font-weight:700}
+.preview{max-width:180px;max-height:120px;border-radius:10px;object-fit:cover;border:1px solid #3b4650;display:none}
+.notice{border:1px solid #3a3322;background:rgba(245,185,40,.06);border-radius:12px;padding:14px;color:#c9cfd5;line-height:1.5;font-size:13px}
+.password-row{position:relative}.password-row button{position:absolute;right:8px;top:8px;height:36px;width:40px;border:0;background:transparent;color:#b8c1ca}
+.check{display:flex;align-items:flex-start;gap:10px;margin-top:15px;color:#cdd4db;font-size:14px;line-height:1.45}.check input{width:18px;height:18px;flex:none;margin-top:1px}
+.actions{display:flex;justify-content:space-between;gap:12px;margin-top:22px}
+.btn{border:1px solid #35404a;background:#11171d;color:#eef2f5;padding:14px 22px;border-radius:11px;font-weight:800}
+.btn.primary{background:linear-gradient(90deg,#e7a800,#ffd45a);color:#090b0d;border-color:#f7c33c;min-width:190px}
+.btn:hover{filter:brightness(1.08)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.summary{display:grid;gap:10px}.summary div{display:flex;justify-content:space-between;gap:20px;padding:12px 14px;background:#0a1117;border:1px solid #202a33;border-radius:10px}.summary span{color:#8f9aa5}.summary strong{text-align:right}
+footer{text-align:center;color:#66727d;padding:25px 0 45px;font-size:12px;letter-spacing:2px}
+.success{text-align:center;padding:25px 5px}.success .circle{width:76px;height:76px;margin:auto;border-radius:50%;display:grid;place-items:center;background:rgba(83,211,154,.12);border:1px solid rgba(83,211,154,.5);font-size:35px;color:var(--ok)}
+.hidden{display:none!important}
+@media(max-width:780px){
+  .hero{grid-template-columns:1fr}.crow-art{height:180px;position:absolute;right:-90px;top:100px;opacity:.3}.hero{position:relative}
+  .grid,.grid.three,.choice-grid{grid-template-columns:1fr}.field.full{grid-column:auto}
+  .form-card{padding:18px;border-radius:17px}.brand-name{font-size:23px;letter-spacing:6px}
+  .logo{width:56px;height:56px}.logo svg{width:38px;height:38px}
+  h1{font-size:37px;max-width:330px}.hero p{font-size:15px;max-width:340px}
+  .actions{position:sticky;bottom:0;background:rgba(3,4,5,.94);padding:12px 0;z-index:10}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <div class="header-glow"></div>
+  <div class="brand">
+    <div class="logo">
+      <svg viewBox="0 0 100 100" aria-label="Corbeau">
+        <path d="M30 77c13-4 16-16 11-28-4-10 2-23 16-31-1 10 4 15 13 19 11 5 16 15 12 27-5 16-22 23-52 20z"/>
+        <path d="M67 37c9-2 18 0 23 7-10 2-16 0-23-7z"/>
+        <circle cx="78" cy="39" r="2.8" fill="#f5b928"/>
+        <path d="M42 76c8-5 16-7 27-5-9 6-18 8-27 5z"/>
+      </svg>
+    </div>
+    <div><div class="brand-name">CORBEAU</div><div class="tagline">Une opportunité à portée de main</div></div>
+  </div>
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Créer mon compte</div>
+      <h1>Bienvenue dans <span>Corbeau.</span></h1>
+      <p>Inscris-toi pour rejoindre la plateforme et commencer à développer tes revenus grâce aux opportunités proposées.</p>
+    </div>
+    <div class="crow-art" aria-hidden="true">
+      <svg viewBox="0 0 430 260">
+        <defs><radialGradient id="g"><stop offset="0" stop-color="#f8cf50" stop-opacity=".35"/><stop offset="1" stop-color="#f8cf50" stop-opacity="0"/></radialGradient></defs>
+        <circle cx="300" cy="85" r="130" fill="url(#g)"/>
+        <circle cx="300" cy="92" r="90" fill="none" stroke="#eab52d" stroke-width="4" opacity=".7"/>
+        <path d="M90 240c28-56 43-109 101-143 24-14 48-24 78-31-8 18-7 32 8 44 35 28 59 70 60 130H90z" fill="#050607"/>
+        <path d="M215 90c34-37 79-51 130-42l-54 28 50 8c-36 12-68 30-96 53z" fill="#0a0d10"/>
+        <path d="M287 53c21-20 49-27 77-18l-27 12 29 8-43 9z" fill="#11161b"/>
+        <circle cx="339" cy="47" r="5" fill="#f5b928"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-head"><span id="progressText">Étape 1 sur 9</span><span id="progressPercent">11%</span></div>
+  <div class="progress"><i id="bar"></i></div>
+  <div class="steps" id="stepDots"></div>
+</div>
+
+<form id="registerForm" novalidate>
+  <section class="form-card screen active" data-step="1">
+    <div class="screen-title"><div class="num">01</div><div><h2>Informations personnelles</h2><p>Commençons par créer ton profil.</p></div></div>
+    <div class="grid">
+      <div class="field"><label>Prénom <span class="req">*</span></label><input id="prenom" required placeholder="Ex. Sabirou"></div>
+      <div class="field"><label>Nom <span class="req">*</span></label><input id="nom" required placeholder="Ex. Tairou"></div>
+      <div class="field"><label>Date de naissance <span class="req">*</span></label><input id="naissance" type="date" required></div>
+      <div class="field"><label>Numéro de téléphone <span class="req">*</span></label><input id="telephone" type="tel" required placeholder="+229 XX XX XX XX"></div>
+      <div class="field"><label>Ville <span class="req">*</span></label><input id="ville" required placeholder="Ex. Abomey-Calavi"></div>
+      <div class="field"><label>Quartier</label><input id="quartier" placeholder="Ton quartier"></div>
+    </div>
+  </section>
+
+  <section class="form-card screen" data-step="2">
+    <div class="screen-title"><div class="num">02</div><div><h2>Ton statut</h2><p>Cette information permet d'adapter ton parcours.</p></div></div>
+    <div class="choice-grid">
+      <label class="choice"><input type="radio" name="statut" value="eleve"><span class="ico">🎓</span><span><strong>Je suis élève</strong><small>Pour les utilisateurs actuellement scolarisés.</small></span></label>
+      <label class="choice"><input type="radio" name="statut" value="adulte"><span class="ico">👤</span><span><strong>Je suis adulte</strong><small>Pour les utilisateurs non scolarisés.</small></span></label>
+    </div>
+    <div id="schoolBox" class="section-box gold hidden">
+      <h3>Informations scolaires</h3>
+      <div class="grid three">
+        <div class="field"><label>Nom de l'établissement <span class="req">*</span></label><input id="ecole" placeholder="Nom de ton établissement"></div>
+        <div class="field"><label>Classe / niveau <span class="req">*</span></label><input id="classe" placeholder="Ex. 3e, 2nde, Terminale"></div>
+        <div class="field"><label>Numéro de carte scolaire</label><input id="numCarte" placeholder="Numéro de la carte"></div>
+      </div>
+      <div class="section-box">
+        <h3>Informations du tuteur</h3>
+        <div class="grid three">
+          <div class="field"><label>Nom et prénom du tuteur <span class="req">*</span></label><input id="tuteur" placeholder="Nom complet"></div>
+          <div class="field"><label>Numéro du tuteur <span class="req">*</span></label><input id="telTuteur" type="tel" placeholder="+229 XX XX XX XX"></div>
+          <div class="field"><label>Lien avec l'élève</label><select id="lien"><option value="">Sélectionner</option><option>Parent</option><option>Tuteur légal</option><option>Frère / sœur</option><option>Autre</option></select></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card screen" data-step="3">
+    <div class="screen-title"><div class="num">03</div><div><h2>Mon activité</h2><p>Dis-nous ce qui t'intéresse sur Corbeau.</p></div></div>
+    <div class="grid">
+      <div class="field"><label>Type d'activité <span class="req">*</span></label><select id="activite" required><option value="">Choisir</option><option>Vente de produits</option><option>Affiliation</option><option>Parrainage</option><option>Micro-tâches</option><option>Plusieurs activités</option></select></div>
+      <div class="field"><label>Expérience</label><select id="experience"><option value="">Choisir</option><option>Débutant</option><option>Quelques mois</option><option>Plus d'un an</option></select></div>
+      <div class="field full"><label>Présente brièvement ton objectif</label><input id="objectif" placeholder="Ex. gagner un revenu complémentaire grâce à Corbeau"></div>
+    </div>
+  </section>
+
+  <section class="form-card screen" data-step="4">
+    <div class="screen-title"><div class="num">04</div><div><h2>Mon adresse</h2><p>Quelques informations pour ton profil.</p></div></div>
+    <div class="grid">
+      <div class="field"><label>Pays</label><select id="pays"><option>Bénin</option><option>Togo</option><option>Côte d'Ivoire</option><option>Burkina Faso</option><option>Niger</option><option>Autre</option></select></div>
+      <div class="field"><label>Département</label><input id="departement" placeholder="Ex. Atlantique"></div>
+      <div class="field"><label>Commune</label><input id="commune" placeholder="Ex. Abomey-Calavi"></div>
+      <div class="field"><label>Adresse / repère</label><input id="adresse" placeholder="Un repère proche de chez toi"></div>
+    </div>
+    <div class="notice" style="margin-top:20px">Ces informations servent à compléter ton profil. Évite de saisir des informations qui ne sont pas nécessaires à ton inscription.</div>
+  </section>
+
+  <section class="form-card screen" data-step="5">
+    <div class="screen-title"><div class="num">05</div><div><h2>Vérifier mon identité</h2><p>Ajoute un document permettant de vérifier ton compte.</p></div></div>
+    <div class="grid">
+      <div class="field"><label>Type de document <span class="req">*</span></label><select id="docType" required><option value="">Choisir</option><option>CNI / carte d'identité</option><option>Carte scolaire</option><option>Passeport</option><option>Autre document officiel</option></select></div>
+      <div class="field"><label>Numéro du document</label><input id="docNumero" placeholder="Numéro du document"></div>
+      <div class="field full">
+        <label>Photo du document <span class="req">*</span></label>
+        <label class="upload" for="docPhoto"><div class="big">📄</div><p>Appuie pour sélectionner une photo</p><span>JPG, PNG ou WEBP</span><img id="docPreview" class="preview"></label>
+        <input id="docPhoto" type="file" accept="image/*">
+      </div>
+    </div>
+    <div class="notice" style="margin-top:18px">Ne partage jamais ton document d'identité dans un espace public. Cette interface prépare le fichier pour un futur stockage sécurisé côté serveur.</div>
+  </section>
+
+  <section class="form-card screen" data-step="6">
+    <div class="screen-title"><div class="num">06</div><div><h2>Ma photo de profil</h2><p>Ajoute une photo claire pour ton profil Corbeau.</p></div></div>
+    <label class="upload" for="profilPhoto">
+      <div class="big">📷</div><p>Choisir une photo de profil</p><span>Privilégie une photo nette et récente</span><img id="profilPreview" class="preview">
+    </label>
+    <input id="profilPhoto" type="file" accept="image/*">
+    <div class="grid" style="margin-top:18px">
+      <div class="field"><label>Nom d'utilisateur</label><input id="username" placeholder="Ex. corbeau_sabirou"></div>
+      <div class="field"><label>Bio courte</label><input id="bio" placeholder="Quelques mots sur toi"></div>
+    </div>
+  </section>
+
+  <section class="form-card screen" data-step="7">
+    <div class="screen-title"><div class="num">07</div><div><h2>Mes préférences</h2><p>Choisis les opportunités que tu souhaites découvrir.</p></div></div>
+    <div class="choice-grid">
+      <label class="choice"><input type="checkbox" name="pref" value="vente"><span class="ico">🛍️</span><span><strong>Vente</strong><small>Découvrir des produits et opportunités de vente.</small></span></label>
+      <label class="choice"><input type="checkbox" name="pref" value="affiliation"><span class="ico">🔗</span><span><strong>Affiliation</strong><small>Gagner des commissions via des recommandations.</small></span></label>
+      <label class="choice"><input type="checkbox" name="pref" value="parrainage"><span class="ico">🤝</span><span><strong>Parrainage</strong><small>Inviter des personnes et suivre tes récompenses.</small></span></label>
+      <label class="choice"><input type="checkbox" name="pref" value="micro-taches"><span class="ico">⚡</span><span><strong>Micro-tâches</strong><small>Découvrir des tâches disponibles sur la plateforme.</small></span></label>
+    </div>
+  </section>
+
+  <section class="form-card screen" data-step="8">
+    <div class="screen-title"><div class="num">08</div><div><h2>Sécuriser mon compte</h2><p>Choisis un mot de passe personnel.</p></div></div>
+    <div class="grid">
+      <div class="field password-row"><label>Mot de passe <span class="req">*</span></label><input id="password" type="password" required minlength="8" placeholder="Minimum 8 caractères"><button type="button" data-toggle="password">◉</button></div>
+      <div class="field password-row"><label>Confirmer le mot de passe <span class="req">*</span></label><input id="confirmPassword" type="password" required minlength="8" placeholder="Retape ton mot de passe"><button type="button" data-toggle="confirmPassword">◉</button></div>
+    </div>
+    <label class="check"><input id="terms" type="checkbox" required> <span>J'accepte les conditions d'utilisation et la politique de confidentialité de Corbeau.</span></label>
+    <div class="notice" style="margin-top:18px">Conseil : utilise un mot de passe unique d'au moins 8 caractères et ne le communique à personne.</div>
+  </section>
+
+  <section class="form-card screen" data-step="9">
+    <div class="screen-title"><div class="num">09</div><div><h2>Vérifier et terminer</h2><p>Relis tes informations avant de créer ton compte.</p></div></div>
+    <div class="summary" id="summary"></div>
+    <div class="notice" style="margin-top:18px">En cliquant sur « Créer mon compte », tes informations seront préparées pour l'enregistrement. La connexion réelle à Supabase devra être configurée côté application avec les clés publiques adaptées.</div>
+    <div id="finalMessage" class="hidden success">
+      <div class="circle">✓</div>
+      <h2>Inscription préparée</h2>
+      <p style="color:#9ca7b3">Ton formulaire a été validé sur cette version de l'interface.</p>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button type="button" class="btn" id="prevBtn">← Retour</button>
+    <button type="button" class="btn primary" id="nextBtn">Continuer →</button>
+  </div>
+</form>
+
+<footer>🐦 CORBEAU — PLATEFORME D'OPPORTUNITÉS</footer>
+</div>
+
+<script>
+const total=9;
+let step=1;
+const $=id=>document.getElementById(id);
+const screens=[...document.querySelectorAll('.screen')];
+const dots=$('stepDots');
+for(let i=1;i<=total;i++){const b=document.createElement('b');b.dataset.step=i;dots.appendChild(b)}
+
+function selectedRadio(name){
+  const el=document.querySelector('input[name="'+name+'"]:checked'); return el?el.value:'';
+}
+function setChoiceStyles(){
+  document.querySelectorAll('.choice').forEach(c=>{
+    const input=c.querySelector('input');
+    c.classList.toggle('selected',input.checked);
+  });
+}
+document.addEventListener('change',e=>{
+  if(e.target.matches('.choice input')) setChoiceStyles();
+});
+setChoiceStyles();
+
+document.querySelectorAll('[data-toggle]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const input=$(btn.dataset.toggle);
+    input.type=input.type==='password'?'text':'password';
+  });
+});
+
+function preview(fileInput, previewId){
+  fileInput.addEventListener('change',()=>{
+    const file=fileInput.files[0], img=$(previewId);
+    if(!file){img.style.display='none';return}
+    if(!file.type.startsWith('image/')){fileInput.value='';return}
+    img.src=URL.createObjectURL(file);img.style.display='block';
+  });
+}
+preview($('docPhoto'), 'docPreview');
+preview($('profilPhoto'), 'profilPreview');
+
+function requiredForCurrent(){
+  const s=screens[step-1];
+  let ok=true;
+  s.querySelectorAll('[required]').forEach(el=>{
+    if(el.type==='checkbox' && !el.checked) ok=false;
+    else if(el.type!=='checkbox' && !el.value.trim()) ok=false;
+    el.style.borderColor=(!el.value && el.type!=='checkbox')?'#ff6b6b':'';
+  });
+  if(step===2 && !selectedRadio('statut')) ok=false;
+  if(step===5 && !$('docPhoto').files.length) ok=false;
+  if(step===8 && $('password').value!==$('confirmPassword').value) ok=false;
+  if(!ok) alert('Vérifie les champs obligatoires avant de continuer.');
+  return ok;
+}
+function update(){
+  screens.forEach((s,i)=>s.classList.toggle('active',i===step-1));
+  $('progressText').textContent='Étape '+step+' sur '+total;
+  $('progressPercent').textContent=Math.round(step/total*100)+'%';
+  $('bar').style.width=(step/total*100)+'%';
+  dots.querySelectorAll('b').forEach((b,i)=>b.classList.toggle('active',i<step));
+  $('prevBtn').style.visibility=step===1?'hidden':'visible';
+  $('nextBtn').textContent=step===total?'Créer mon compte →':'Continuer →';
+  if(step===9) buildSummary();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function buildSummary(){
+  const statut=selectedRadio('statut');
+  const prefs=[...document.querySelectorAll('input[name="pref"]:checked')].map(x=>x.parentElement.querySelector('strong').textContent).join(', ')||'Aucune sélection';
+  const data=[
+    ['Nom',(($('prenom').value||'')+' '+($('nom').value||'')).trim()||'—'],
+    ['Téléphone',$('telephone').value||'—'],
+    ['Ville',$('ville').value||'—'],
+    ['Statut',statut==='eleve'?'Élève':statut==='adulte'?'Adulte':'—'],
+    ['Activité',$('activite').value||'—'],
+    ['Document',$('docType').value||'—'],
+    ['Préférences',prefs]
+  ];
+  $('summary').innerHTML=data.map(x=>'<div><span>'+x[0]+'</span><strong>'+escapeHtml(x[1])+'</strong></div>').join('');
+}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
+$('nextBtn').addEventListener('click',()=>{
+  if(!requiredForCurrent()) return;
+  if(step<total){step++;update();return}
+  localStorage.setItem('corbeau_registration_draft', JSON.stringify({
+    prenom:$('prenom').value,nom:$('nom').value,telephone:$('telephone').value,
+    ville:$('ville').value,statut:selectedRadio('statut'),activite:$('activite').value,
+    date:new Date().toISOString()
+  }));
+  $('finalMessage').classList.remove('hidden');
+  $('nextBtn').disabled=true;
+  $('nextBtn').textContent='Compte préparé ✓';
+});
+$('prevBtn').addEventListener('click',()=>{if(step>1){step--;update()}});
+document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',()=>{
+  if(el.style.borderColor) el.style.borderColor='';
+}));
+
+document.querySelectorAll('input[name="statut"]').forEach(r=>r.addEventListener('change',()=>{
+  $('schoolBox').classList.toggle('hidden',r.value!=='eleve' || !r.checked);
+  ['ecole','classe','tuteur','telTuteur'].forEach(id=>{
+    $(id).required=(r.value==='eleve' && r.checked);
+  });
+}));
+
+update();
+</script>
+</body>
+</html>
