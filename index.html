@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050607">
+  <title>Corbeau — Créer mon compte</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-bg"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 80 80" role="img">
+          <circle cx="40" cy="40" r="36" class="gold-circle"/>
+          <path class="crow" d="M20 52c8-2 12-8 13-17 1-9 7-15 17-17-2 5-1 9 3 12 4 3 8 3 13 1-1 8-5 14-13 17-9 3-19 4-33 4zm26-28c2 0 4 1 6 3-3 0-5-1-6-3z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">CORBEAU</div>
+        <div class="brand-tagline">Une opportunité à portée de main</div>
+      </div>
+    </div>
+    <div class="step-counter"><span id="currentStep">1</span> / 9</div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">CRÉER MON COMPTE</div>
+        <h1>Bienvenue dans <span>Corbeau.</span></h1>
+        <p>Inscris-toi pour rejoindre la plateforme et commencer à développer tes revenus grâce aux opportunités proposées.</p>
+      </div>
+      <div class="hero-crow" aria-hidden="true">
+        <svg viewBox="0 0 420 320">
+          <circle cx="285" cy="125" r="118" class="halo"/>
+          <path class="big-crow" d="M65 265c54-17 75-60 72-112-3-57 30-98 91-115-10 25-5 46 17 62 22 16 48 17 75 3-7 46-35 78-83 94-56 18-107 36-172 68z"/>
+          <path class="beak" d="M250 94l125 22-118 23z"/>
+          <circle cx="286" cy="98" r="7" class="eye"/>
+        </svg>
+      </div>
+    </section>
+
+    <div class="progress">
+      <div id="progressBar"></div>
+    </div>
+
+    <form id="registrationForm" novalidate>
+      <!-- 1 -->
+      <section class="screen active" data-step="1">
+        <div class="screen-head"><div class="num">01</div><div><h2>Informations personnelles</h2><p>Commençons par créer ton profil.</p></div></div>
+        <div class="grid two">
+          <label>Prénom *<input name="prenom" required placeholder="Ex. Sabirou"></label>
+          <label>Nom *<input name="nom" required placeholder="Ex. Tairou"></label>
+          <label>Date de naissance *<input name="naissance" type="date" required></label>
+          <label>Numéro de téléphone *<input name="telephone" type="tel" required placeholder="+229 XX XX XX XX"></label>
+          <label>Ville *<input name="ville" required placeholder="Ex. Abomey-Calavi"></label>
+          <label>Email *<input name="email" type="email" required placeholder="ton@email.com"></label>
+        </div>
+      </section>
+
+      <!-- 2 -->
+      <section class="screen" data-step="2">
+        <div class="screen-head"><div class="num">02</div><div><h2>Ton statut</h2><p>Cette information permet d'adapter ton parcours.</p></div></div>
+        <div class="choice-grid">
+          <label class="choice"><input type="radio" name="statut" value="eleve" required><span class="choice-icon">🎓</span><span><b>Je suis élève</b><small>J'étudie actuellement.</small></span></label>
+          <label class="choice"><input type="radio" name="statut" value="adulte"><span class="choice-icon">👤</span><span><b>Je suis adulte</b><small>Je souhaite accéder aux opportunités.</small></span></label>
+          <label class="choice"><input type="radio" name="statut" value="etudiant"><span class="choice-icon">📚</span><span><b>Je suis étudiant(e)</b><small>Je poursuis des études supérieures.</small></span></label>
+        </div>
+      </section>
+
+      <!-- 3 -->
+      <section class="screen" data-step="3">
+        <div class="screen-head"><div class="num">03</div><div><h2>Informations scolaires</h2><p>À remplir si ton statut concerne les études.</p></div></div>
+        <div class="grid two">
+          <label>Nom de l'établissement<input name="etablissement" placeholder="Nom de ton établissement"></label>
+          <label>Classe / niveau<input name="niveau" placeholder="Ex. 3e, 2nde, Terminale..."></label>
+          <label>Numéro de carte scolaire<input name="carte" placeholder="Numéro de la carte"></label>
+          <label>Année scolaire<input name="annee" placeholder="Ex. 2026-2027"></label>
+        </div>
+        <div class="info-box">Ces informations servent uniquement à adapter ton parcours. Tu peux les compléter plus tard.</div>
+      </section>
+
+      <!-- 4 -->
+      <section class="screen" data-step="4">
+        <div class="screen-head"><div class="num">04</div><div><h2>Informations du tuteur</h2><p>Si nécessaire, renseigne un responsable légal.</p></div></div>
+        <div class="grid two">
+          <label>Nom et prénom du tuteur<input name="tuteurNom" placeholder="Nom complet"></label>
+          <label>Numéro du tuteur<input name="tuteurTel" type="tel" placeholder="+229 XX XX XX XX"></label>
+          <label>Lien avec l'élève<select name="lien"><option value="">Sélectionner</option><option>Parent</option><option>Tuteur légal</option><option>Frère / sœur</option><option>Autre</option></select></label>
+          <label>Email du tuteur<input name="tuteurEmail" type="email" placeholder="email@exemple.com"></label>
+        </div>
+      </section>
+
+      <!-- 5 -->
+      <section class="screen" data-step="5">
+        <div class="screen-head"><div class="num">05</div><div><h2>Pièce d'identité</h2><p>Prépare ton document pour la vérification du compte.</p></div></div>
+        <div class="choice-grid">
+          <label class="choice"><input type="radio" name="pieceType" value="cip" required><span class="choice-icon">🪪</span><span><b>Carte d'identité</b><small>Document national valide.</small></span></label>
+          <label class="choice"><input type="radio" name="pieceType" value="passeport"><span class="choice-icon">🛂</span><span><b>Passeport</b><small>Document de voyage valide.</small></span></label>
+          <label class="choice"><input type="radio" name="pieceType" value="autre"><span class="choice-icon">📄</span><span><b>Autre document</b><small>Selon les documents acceptés.</small></span></label>
+        </div>
+        <label class="upload">Téléverser le document
+          <input type="file" name="piece" accept="image/*,.pdf">
+          <span>📎 Choisir une photo ou un PDF</span>
+        </label>
+        <div class="info-box">Ne téléverse qu'un document qui t'appartient. Le stockage sécurisé pourra être connecté à Supabase dans une étape backend.</div>
+      </section>
+
+      <!-- 6 -->
+      <section class="screen" data-step="6">
+        <div class="screen-head"><div class="num">06</div><div><h2>Photo de profil</h2><p>Ajoute une photo pour personnaliser ton compte.</p></div></div>
+        <div class="avatar-area">
+          <div class="avatar" id="avatarPreview">👤</div>
+          <label class="upload compact">Choisir une photo
+            <input type="file" id="avatarInput" name="avatar" accept="image/*">
+            <span>📷 Importer une photo</span>
+          </label>
+        </div>
+        <div class="grid two">
+          <label>Nom d'utilisateur *<input name="username" required placeholder="Ex. sabirou229"></label>
+          <label>Code parrainage (facultatif)<input name="parrainage" placeholder="Ex. CORBEAU123"></label>
+        </div>
+      </section>
+
+      <!-- 7 -->
+      <section class="screen" data-step="7">
+        <div class="screen-head"><div class="num">07</div><div><h2>Mes préférences</h2><p>Choisis les opportunités qui t'intéressent.</p></div></div>
+        <div class="check-grid">
+          <label><input type="checkbox" name="interets" value="vente"> 🛍️ Vente</label>
+          <label><input type="checkbox" name="interets" value="affiliation"> 🔗 Affiliation</label>
+          <label><input type="checkbox" name="interets" value="parrainage"> 👥 Parrainage</label>
+          <label><input type="checkbox" name="interets" value="microtaches"> ⚡ Micro-tâches</label>
+          <label><input type="checkbox" name="interets" value="sondages"> 📊 Sondages</label>
+          <label><input type="checkbox" name="interets" value="formation"> 🎓 Formations</label>
+        </div>
+      </section>
+
+      <!-- 8 -->
+      <section class="screen" data-step="8">
+        <div class="screen-head"><div class="num">08</div><div><h2>Sécuriser mon compte</h2><p>Choisis un mot de passe personnel.</p></div></div>
+        <div class="grid two">
+          <label>Mot de passe *<div class="password"><input name="password" type="password" minlength="8" required placeholder="Minimum 8 caractères"><button type="button" data-toggle="password">👁</button></div></label>
+          <label>Confirmer le mot de passe *<div class="password"><input name="confirmPassword" type="password" minlength="8" required placeholder="Retape ton mot de passe"><button type="button" data-toggle="confirmPassword">👁</button></div></label>
+        </div>
+        <div class="security-list">
+          <span id="lengthRule">○ 8 caractères minimum</span>
+          <span id="numberRule">○ Au moins un chiffre</span>
+          <span id="specialRule">○ Un caractère spécial</span>
+        </div>
+        <label class="agree"><input type="checkbox" name="conditions" required> J'accepte les <u>conditions d'utilisation</u> de Corbeau.</label>
+      </section>
+
+      <!-- 9 -->
+      <section class="screen" data-step="9">
+        <div class="screen-head"><div class="num">09</div><div><h2>Vérifier et créer mon compte</h2><p>Relis tes informations avant de terminer.</p></div></div>
+        <div id="summary" class="summary"></div>
+        <div class="success-preview">
+          <div>🖤</div>
+          <strong>Prêt à rejoindre Corbeau ?</strong>
+          <p>En cliquant sur « Créer mon compte », tes informations seront préparées pour l'enregistrement sécurisé.</p>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button type="button" id="prevBtn" class="btn secondary">← Retour</button>
+        <button type="button" id="nextBtn" class="btn primary">Continuer →</button>
+      </div>
+    </form>
+
+    <footer>🐦 CORBEAU — PLATEFORME D'OPPORTUNITÉS</footer>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <script src="script.js"></script>
+</body>
+</html>
