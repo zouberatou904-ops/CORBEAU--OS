@@ -6,871 +6,242 @@
 
   <title>Corbeau — Inscription</title>
 
+  <meta
+    name="description"
+    content="Inscription à Corbeau, la plateforme qui permet de développer son activité commerciale."
+  >
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
+    :root {
+      --bg: #070707;
+      --card: #111111;
+      --card2: #171717;
+      --border: #292929;
+      --text: #ffffff;
+      --muted: #a5a5a5;
+      --purple: #8b5cf6;
+      --purple2: #6d28d9;
+      --green: #22c55e;
+      --red: #ef4444;
+      --gold: #f5c451;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
     }
 
     body {
       min-height: 100vh;
-      background: linear-gradient(135deg, #090909, #1b1b1b);
-      color: #fff;
-      padding: 20px;
+      background:
+        radial-gradient(
+          circle at top,
+          rgba(139, 92, 246, 0.18),
+          transparent 35%
+        ),
+        var(--bg);
+      color: var(--text);
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      padding: 20px 14px 40px;
     }
 
-    .container {
-      max-width: 520px;
-      margin: auto;
+    .page {
+      width: 100%;
+      max-width: 620px;
+      margin: 0 auto;
     }
 
-    .logo {
+    /* =========================
+       LOGO
+    ========================= */
+
+    .brand {
       text-align: center;
-      margin-bottom: 20px;
+      margin: 10px 0 25px;
     }
 
-    .logo img {
+    .logo-wrapper {
       width: 100px;
       height: 100px;
-      object-fit: contain;
-      border-radius: 20px;
+      margin: 0 auto 14px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 28px;
+
+      background:
+        linear-gradient(
+          145deg,
+          #1d1d1d,
+          #090909
+        );
+
+      border: 1px solid #333;
+
+      box-shadow:
+        0 20px 50px rgba(0,0,0,.5),
+        0 0 40px rgba(139,92,246,.12);
     }
 
-    h1 {
-      text-align: center;
+    .logo-svg {
+      width: 75px;
+      height: 75px;
+    }
+
+    .brand-name {
       font-size: 32px;
-      margin-bottom: 8px;
+      font-weight: 900;
+      letter-spacing: 2px;
     }
 
-    .subtitle {
+    .brand-name span {
+      color: var(--purple);
+    }
+
+    .tagline {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* =========================
+       INTRO
+    ========================= */
+
+    .intro {
       text-align: center;
-      color: #aaa;
+      margin-bottom: 22px;
+    }
+
+    .intro h1 {
+      font-size: clamp(28px, 8vw, 42px);
+      line-height: 1.08;
+      margin-bottom: 10px;
+    }
+
+    .intro p {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    /* =========================
+       CARD
+    ========================= */
+
+    .card {
+      background:
+        linear-gradient(
+          180deg,
+          rgba(255,255,255,.035),
+          rgba(255,255,255,.015)
+        ),
+        var(--card);
+
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 20px;
+
+      box-shadow:
+        0 25px 70px rgba(0,0,0,.45);
+    }
+
+    /* =========================
+       PROGRESS
+    ========================= */
+
+    .progress-box {
       margin-bottom: 25px;
     }
 
-    .card {
-      background: #151515;
-      border: 1px solid #2d2d2d;
+    .progress-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .progress {
+      height: 6px;
+      background: #252525;
       border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 25%;
+      background: linear-gradient(
+        90deg,
+        var(--purple),
+        #a78bfa
+      );
+      border-radius: 20px;
+      transition: .3s;
+    }
+
+    /* =========================
+       SECTIONS
+    ========================= */
+
+    .section {
+      margin-bottom: 27px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 15px;
+    }
+
+    .section-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: rgba(139,92,246,.16);
+      color: #c4b5fd;
+      font-weight: 800;
+      font-size: 14px;
+      border: 1px solid rgba(139,92,246,.3);
     }
 
     .section-title {
-      font-size: 18px;
-      font-weight: bold;
-      margin: 20px 0 12px;
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    /* =========================
+       INPUTS
+    ========================= */
+
+    .field {
+      margin-bottom: 14px;
     }
 
     label {
       display: block;
-      margin: 13px 0 7px;
-      color: #ddd;
-      font-size: 14px;
-    }
-
-    input,
-    select {
-      width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid #3a3a3a;
-      background: #0e0e0e;
-      color: white;
-      outline: none;
-    }
-
-    input:focus,
-    select:focus {
-      border-color: #8b5cf6;
-    }
-
-    .choice {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .choice label {
-      flex: 1;
-      margin: 0;
-      padding: 15px;
-      border: 1px solid #3a3a3a;
-      border-radius: 12px;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    .choice input {
-      width: auto;
-      margin-right: 6px;
-    }
-
-    .student-box {
-      display: none;
-      background: #101010;
-      border: 1px solid #343434;
-      border-radius: 15px;
-      padding: 15px;
-      margin-top: 15px;
-    }
-
-    .document-box {
-      background: #101010;
-      padding: 15px;
-      border-radius: 15px;
-      margin-top: 15px;
-    }
-
-    .hint {
-      font-size: 12px;
-      color: #999;
-      margin-top: 7px;
-      line-height: 1.5;
-    }
-
-    button {
-      width: 100%;
-      margin-top: 25px;
-      padding: 16px;
-      border: none;
-      border-radius: 14px;
-      background: #8b5cf6;
-      color: white;
-      font-size: 17px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
-
-    .message {
-      display: none;
-      margin-top: 18px;
-      padding: 15px;
-      border-radius: 12px;
-      line-height: 1.5;
-    }
-
-    .success {
-      display: block;
-      background: #10351e;
-      border: 1px solid #287a42;
-      color: #b9f6c9;
-    }
-
-    .error {
-      display: block;
-      background: #3a1111;
-      border: 1px solid #8b2929;
-      color: #ffbaba;
-    }
-
-    .required {
-      color: #ff6b6b;
-    }
-
-    .footer {
-      text-align: center;
-      color: #777;
-      font-size: 12px;
-      margin-top: 20px;
-    }
-  </style>
-</head>
-
-<body>
-
-<div class="container">
-
-  <div class="logo">
-    <!-- Si ton logo porte un autre nom, change simplement le nom ici -->
-    <img src="corbeau-logo.png" alt="Logo Corbeau">
-  </div>
-
-  <h1>Bienvenue sur Corbeau</h1>
-
-  <p class="subtitle">
-    Crée ton compte pour commencer ton activité.
-  </p>
-
-  <div class="card">
-
-    <form id="registrationForm">
-
-      <div class="section-title">Informations personnelles</div>
-
-      <label>Prénom <span class="required">*</span></label>
-      <input
-        type="text"
-        id="firstName"
-        placeholder="Ton prénom"
-        required
-      >
-
-      <label>Nom <span class="required">*</span></label>
-      <input
-        type="text"
-        id="lastName"
-        placeholder="Ton nom"
-        required
-      >
-
-      <label>Date de naissance</label>
-      <input
-        type="date"
-        id="birthDate"
-      >
-
-      <label>Ville</label>
-      <input
-        type="text"
-        id="city"
-        placeholder="Ex : Abomey-Calavi"
-      >
-
-      <label>Téléphone <span class="required">*</span></label>
-      <input
-        type="tel"
-        id="phone"
-        placeholder="+229..."
-        required
-      >
-
-      <label>Email <span class="required">*</span></label>
-      <input
-        type="email"
-        id="email"
-        placeholder="exemple@email.com"
-        required
-      >
-
-      <label>Mot de passe <span class="required">*</span></label>
-      <input
-        type="password"
-        id="password"
-        placeholder="Minimum 6 caractères"
-        minlength="6"
-        required
-      >
-
-      <div class="section-title">Tu es :</div>
-
-      <div class="choice">
-
-        <label>
-          <input
-            type="radio"
-            name="memberStatus"
-            value="adult"
-            checked
-          >
-          Adulte
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            name="memberStatus"
-            value="student"
-          >
-          Élève
-        </label>
-
-      </div>
-
-      <!-- INFORMATIONS ÉLÈVE -->
-      <div id="studentBox" class="student-box">
-
-        <div class="section-title">
-          Informations scolaires
-        </div>
-
-        <label>Nom de l'école <span class="required">*</span></label>
-        <input
-          type="text"
-          id="schoolName"
-          placeholder="Nom de ton établissement"
-        >
-
-        <label>Niveau scolaire <span class="required">*</span></label>
-        <input
-          type="text"
-          id="schoolLevel"
-          placeholder="Ex : 3ème, Terminale..."
-        >
-
-        <label>Numéro de carte scolaire</label>
-        <input
-          type="text"
-          id="schoolCardNumber"
-          placeholder="Numéro de ta carte scolaire"
-        >
-
-        <div class="section-title">
-          Informations du tuteur
-        </div>
-
-        <label>Nom complet du tuteur <span class="required">*</span></label>
-        <input
-          type="text"
-          id="guardianName"
-          placeholder="Nom complet"
-        >
-
-        <label>Numéro du tuteur <span class="required">*</span></label>
-        <input
-          type="tel"
-          id="guardianPhone"
-          placeholder="+229..."
-        >
-
-        <label>Lien avec le tuteur</label>
-        <select id="guardianRelation">
-          <option value="">Sélectionner</option>
-          <option value="pere">Père</option>
-          <option value="mere">Mère</option>
-          <option value="tuteur">Tuteur</option>
-          <option value="autre">Autre</option>
-        </select>
-
-      </div>
-
-      <!-- DOCUMENT -->
-      <div class="section-title">
-        Vérification d'identité
-      </div>
-
-      <div class="document-box">
-
-        <label>Type de document <span class="required">*</span></label>
-
-        <select id="documentType" required>
-          <option value="">Sélectionner</option>
-          <option value="cni">Carte nationale d'identité (CNI)</option>
-          <option value="school_card">Carte scolaire</option>
-        </select>
-
-        <label>
-          Photo du document <span class="required">*</span>
-        </label>
-
-        <input
-          type="file"
-          id="documentFile"
-          accept="image/jpeg,image/png,application/pdf"
-          required
-        >
-
-        <p class="hint">
-          Formats acceptés : JPG, PNG ou PDF.
-          Taille maximale : 5 MB.
-          Ton document sera conservé de manière privée.
-        </p>
-
-      </div>
-
-      <button
-        type="submit"
-        id="submitButton"
-      >
-        Créer mon compte
-      </button>
-
-      <div id="message" class="message"></div>
-
-    </form>
-
-  </div>
-
-  <div class="footer">
-    © 2026 Corbeau — Tous droits réservés.
-  </div>
-
-</div>
-
-
-<script>
-
-  /* =====================================================
-     CONFIGURATION SUPABASE
-     ===================================================== */
-
-  const SUPABASE_URL =
-    "https://nmkpanyeswafuchmvcij.supabase.co";
-
-  const SUPABASE_KEY =
-    "sb_publishable_eS4WoqDIOx9JBCtODj9yaw_Fd5sylo2";
-
-  const { createClient } =
-    window.supabase;
-
-  const supabaseClient =
-    createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
-
-
-  /* =====================================================
-     ÉLÈVE : AFFICHER / CACHER LES INFORMATIONS
-     ===================================================== */
-
-  const studentBox =
-    document.getElementById("studentBox");
-
-  const statusInputs =
-    document.querySelectorAll(
-      'input[name="memberStatus"]'
-    );
-
-  function updateStudentFields() {
-
-    const selected =
-      document.querySelector(
-        'input[name="memberStatus"]:checked'
-      );
-
-    if (!selected) return;
-
-    if (selected.value === "student") {
-
-      studentBox.style.display = "block";
-
-      document.getElementById("schoolName")
-        .required = true;
-
-      document.getElementById("schoolLevel")
-        .required = true;
-
-      document.getElementById("guardianName")
-        .required = true;
-
-      document.getElementById("guardianPhone")
-        .required = true;
-
-    } else {
-
-      studentBox.style.display = "none";
-
-      document.getElementById("schoolName")
-        .required = false;
-
-      document.getElementById("schoolLevel")
-        .required = false;
-
-      document.getElementById("guardianName")
-        .required = false;
-
-      document.getElementById("guardianPhone")
-        .required = false;
-    }
-  }
-
-  statusInputs.forEach(input => {
-    input.addEventListener(
-      "change",
-      updateStudentFields
-    );
-  });
-
-  updateStudentFields();
-
-
-  /* =====================================================
-     MESSAGE
-     ===================================================== */
-
-  function showMessage(text, type) {
-
-    const message =
-      document.getElementById("message");
-
-    message.textContent = text;
-
-    message.className =
-      "message " + type;
-  }
-
-
-  /* =====================================================
-     INSCRIPTION
-     ===================================================== */
-
-  document
-    .getElementById("registrationForm")
-    .addEventListener("submit", async function(event) {
-
-      event.preventDefault();
-
-      const button =
-        document.getElementById("submitButton");
-
-      button.disabled = true;
-      button.textContent =
-        "Création du compte...";
-
-      try {
-
-        const firstName =
-          document.getElementById("firstName").value.trim();
-
-        const lastName =
-          document.getElementById("lastName").value.trim();
-
-        const birthDate =
-          document.getElementById("birthDate").value || null;
-
-        const city =
-          document.getElementById("city").value.trim();
-
-        const phone =
-          document.getElementById("phone").value.trim();
-
-        const email =
-          document.getElementById("email").value.trim();
-
-        const password =
-          document.getElementById("password").value;
-
-        const memberStatus =
-          document.querySelector(
-            'input[name="memberStatus"]:checked'
-          ).value;
-
-        const documentType =
-          document.getElementById("documentType").value;
-
-        const documentFile =
-          document.getElementById("documentFile").files[0];
-
-
-        /* ==============================
-           VÉRIFICATIONS
-           ============================== */
-
-        if (!documentFile) {
-          throw new Error(
-            "Veuillez sélectionner votre document."
-          );
-        }
-
-        if (documentFile.size > 5 * 1024 * 1024) {
-          throw new Error(
-            "Le document ne doit pas dépasser 5 MB."
-          );
-        }
-
-        const allowedTypes = [
-          "image/jpeg",
-          "image/png",
-          "application/pdf"
-        ];
-
-        if (!allowedTypes.includes(documentFile.type)) {
-          throw new Error(
-            "Format de document non autorisé."
-          );
-        }
-
-
-        /* ==============================
-           CRÉER LE COMPTE AUTH
-           ============================== */
-
-        button.textContent =
-          "Création du compte...";
-
-        const {
-          data: authData,
-          error: authError
-        } =
-          await supabaseClient.auth.signUp({
-
-            email: email,
-
-            password: password,
-
-            options: {
-              data: {
-                first_name: firstName,
-                last_name: lastName,
-                phone: phone,
-                role: "earner",
-                status: memberStatus
-              }
-            }
-
-          });
-
-
-        if (authError) {
-          throw authError;
-        }
-
-        if (!authData.user) {
-          throw new Error(
-            "Impossible de créer le compte."
-          );
-        }
-
-
-        const userId =
-          authData.user.id;
-
-
-        /* ==============================
-           SI CONFIRMATION EMAIL ACTIVÉE
-           ============================== */
-
-        if (!authData.session) {
-
-          showMessage(
-            "Compte créé. Supabase demande une confirmation de ton adresse email. Confirme ton email puis reconnecte-toi avant de poursuivre la vérification du document.",
-            "success"
-          );
-
-          button.disabled = false;
-          button.textContent =
-            "Compte créé";
-
-          return;
-        }
-
-
-        /* ==============================
-           PROFIL
-           ============================== */
-
-        button.textContent =
-          "Enregistrement du profil...";
-
-        const {
-          error: profileError
-        } =
-          await supabaseClient
-            .from("profiles")
-            .upsert({
-
-              id: userId,
-
-              first_name: firstName,
-
-              last_name: lastName,
-
-              phone: phone,
-
-              birth_date: birthDate,
-
-              city: city,
-
-              role: "earner",
-
-              member_status: memberStatus,
-
-              verification_status: "pending"
-
-            });
-
-        if (profileError) {
-          throw profileError;
-        }
-
-
-        /* ==============================
-           INFORMATIONS ÉLÈVE
-           ============================== */
-
-        if (memberStatus === "student") {
-
-          button.textContent =
-            "Enregistrement des informations scolaires...";
-
-          const schoolName =
-            document
-              .getElementById("schoolName")
-              .value.trim();
-
-          const schoolLevel =
-            document
-              .getElementById("schoolLevel")
-              .value.trim();
-
-          const schoolCardNumber =
-            document
-              .getElementById("schoolCardNumber")
-              .value.trim();
-
-          const {
-            error: studentError
-          } =
-            await supabaseClient
-              .from("student_details")
-              .upsert({
-
-                user_id: userId,
-
-                school_name: schoolName,
-
-                school_level: schoolLevel,
-
-                school_card_number:
-                  schoolCardNumber || null
-
-              });
-
-          if (studentError) {
-            throw studentError;
-          }
-
-
-          /* ==============================
-             TUTEUR
-             ============================== */
-
-          const guardianName =
-            document
-              .getElementById("guardianName")
-              .value.trim();
-
-          const guardianPhone =
-            document
-              .getElementById("guardianPhone")
-              .value.trim();
-
-          const guardianRelation =
-            document
-              .getElementById("guardianRelation")
-              .value;
-
-
-          const {
-            error: guardianError
-          } =
-            await supabaseClient
-              .from("guardians")
-              .upsert({
-
-                student_id: userId,
-
-                full_name: guardianName,
-
-                phone: guardianPhone,
-
-                relation:
-                  guardianRelation || null
-
-              });
-
-          if (guardianError) {
-            throw guardianError;
-          }
-
-        }
-
-
-        /* ==============================
-           UPLOAD DOCUMENT
-           ============================== */
-
-        button.textContent =
-          "Envoi du document...";
-
-
-        const extension =
-          documentFile.name
-            .split(".")
-            .pop()
-            .toLowerCase();
-
-
-        const fileName =
-          Date.now() +
-          "-" +
-          Math.random()
-            .toString(36)
-            .substring(2) +
-          "." +
-          extension;
-
-
-        const filePath =
-          userId + "/" + fileName;
-
-
-        const {
-          error: uploadError
-        } =
-          await supabaseClient
-            .storage
-            .from("corbeau-photos")
-            .upload(
-              filePath,
-              documentFile,
-              {
-                cacheControl: "3600",
-                upsert: false,
-                contentType:
-                  documentFile.type
-              }
-            );
-
-
-        if (uploadError) {
-          throw uploadError;
-        }
-
-
-        /* ==============================
-           ENREGISTRER LE DOCUMENT
-           ============================== */
-
-        button.textContent =
-          "Finalisation...";
-
-
-        const {
-          error: documentError
-        } =
-          await supabaseClient
-            .from("identity_documents")
-            .insert({
-
-              user_id: userId,
-
-              document_type: documentType,
-
-              storage_path: filePath,
-
-              verification_status: "pending"
-
-            });
-
-
-        if (documentError) {
-          throw documentError;
-        }
-
-
-        /* ==============================
-           SUCCÈS
-           ============================== */
-
-        showMessage(
-          "🎉 Inscription réussie ! Ton compte a été créé et ton document est en attente de vérification.",
-          "success"
-        );
-
-        button.textContent =
-          "Inscription terminée";
-
-        document
-          .getElementById("registrationForm")
-          .
+      color: #e5e5e5;
+      font-size: 13px
