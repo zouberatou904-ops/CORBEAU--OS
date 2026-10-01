@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<meta name="description" content="Corbeau — inscription">
+<title>Corbeau — Inscription</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#e5b83f;--gold2:#ffd76a;--bg:#060606;--card:#101010;
+  --input:#0a0a0a;--border:#2b2b2b;--text:#f7f5ef;--muted:#96928a;
+  --green:#69c477;--red:#e8756c;
+}
+body{
+  min-height:100vh;background:
+  radial-gradient(circle at 50% -8%,rgba(229,184,63,.18),transparent 34%),
+  linear-gradient(#090909,#040404);
+  color:var(--text);font-family:Arial,Helvetica,sans-serif;
+}
+.page{padding:24px 12px 45px}.container{max-width:760px;margin:auto}
+.brand{display:flex;align-items:center;gap:13px;margin-bottom:28px}
+.logo{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,#ffe18a,#bd8a24 48%,#30200a);
+  border:1px solid #e6bf59;font-size:31px;box-shadow:0 10px 35px #000}
+.brand-name{font-weight:900;letter-spacing:5px;font-size:20px}
+.brand-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.eyebrow{color:var(--gold2);font-weight:800;font-size:11px;letter-spacing:3px}
+h1{font:900 clamp(34px,8vw,52px)/1.05 Georgia,serif;margin-top:8px}
+h1 span{color:var(--gold2)}
+.intro p{color:var(--muted);font-size:14px;line-height:1.6;margin:12px 0 22px}
+.card{background:rgba(16,16,16,.97);border:1px solid #202020;border-radius:23px;
+  padding:clamp(18px,5vw,35px);box-shadow:0 30px 80px #0008}
+.section{margin-bottom:28px}
+.section-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:18px}
+.step{width:35px;height:35px;flex:0 0 35px;border-radius:10px;background:#251e0d;
+  color:var(--gold2);border:1px solid #6c5420;display:grid;place-items:center;font-weight:900;font-size:11px}
+.section-head h2{font-size:17px;margin-bottom:4px}.section-head p{font-size:12px;color:#77736c}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{margin-bottom:14px}.field label{display:block;font-size:12px;font-weight:700;color:#c8c3b9;margin-bottom:7px}
+input,select{width:100%;background:var(--input);border:1px solid var(--border);color:#fff;
+  border-radius:12px;padding:14px;font-size:14px;outline:none}
+input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px #e5b83f14}
+input::placeholder{color:#555}
+.status{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.status-option{border:1px solid var(--border);background:#0b0b0b;border-radius:14px;padding:15px;cursor:pointer}
+.status-option.active{border-color:#d7aa3e;background:#d7aa3e0d}
+.status-option strong{display:block;font-size:14px}.status-option small{display:block;color:#777;margin-top:5px;font-size:11px;line-height:1.4}
+.status-option input{display:none}
+.hidden{display:none!important}
+.doc-box{border:1px dashed #625127;background:#0b0b0b;border-radius:15px;padding:18px;margin-top:4px}
+.doc-title{font-weight:800;font-size:14px}.doc-help{font-size:11px;color:#777;line-height:1.5;margin:6px 0 13px}
+.file-label{display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid #4a3b18;
+  background:#171208;color:var(--gold2);border-radius:11px;padding:13px;cursor:pointer;font-weight:800;font-size:12px}
+.file-label input{display:none}
+.preview{display:none;margin-top:13px}.preview.show{display:block}
+.preview img{width:100%;max-height:260px;object-fit:contain;border-radius:11px;border:1px solid #333;background:#050505}
+.file-name{font-size:11px;color:#aaa;margin-top:7px;word-break:break-all}
+.password-wrap{position:relative}.password-wrap input{padding-right:80px}
+.show{position:absolute;right:9px;bottom:9px;border:0;background:transparent;color:var(--gold2);font-size:11px;font-weight:800;padding:5px}
+.terms{display:flex;gap:9px;color:#777;font-size:12px;line-height:1.5;margin-top:5px}
+.terms input{width:auto;accent-color:var(--gold);margin-top:3px}
+.terms a{color:var(--gold2)}
+button.submit{width:100%;margin-top:20px;padding:16px;border:0;border-radius:13px;
+  background:linear-gradient(135deg,#f4d064,#bd8b2b);color:#171107;font-weight:900;font-size:14px;cursor:pointer}
+button.submit:disabled{opacity:.55;cursor:wait}
+.message{display:none;margin-top:16px;padding:13px;border-radius:12px;font-size:12px;line-height:1.5}
+.message.show{display:block}.message.error{background:#8d2d271c;border:1px solid #b9473e55;color:#ffd1cd}
+.message.success{background:#2e8c391b;border:1px solid #62b96b55;color:#d7f5da}
+.login{text-align:center;color:#777;font-size:12px;margin-top:17px}.login a{color:var(--gold2)}
+footer{text-align:center;color:#555;font-size:10px;letter-spacing:1.5px;margin-top:20px}
+@media(max-width:620px){.grid{grid-template-columns:1fr}.status{grid-template-columns:1fr}.card{padding:18px 15px}}
+</style>
+</head>
+
+<body>
+<div class="page">
+<div class="container">
+
+  <div class="brand">
+    <div class="logo">🐦‍⬛</div>
+    <div>
+      <div class="brand-name">CORBEAU</div>
+      <div class="brand-sub">Une opportunité à portée de main</div>
+    </div>
+  </div>
+
+  <div class="eyebrow">CRÉER MON COMPTE</div>
+  <h1>Bienvenue dans <span>Corbeau.</span></h1>
+  <div class="intro">
+    <p>Inscris-toi pour rejoindre la plateforme et accéder aux opportunités proposées.</p>
+  </div>
+
+  <form class="card" id="registrationForm">
+
+    <div class="section">
+      <div class="section-head">
+        <div class="step">01</div>
+        <div><h2>Informations personnelles</h2><p>Créons ton profil.</p></div>
+      </div>
+
+      <div class="grid">
+        <div class="field"><label>Prénom *</label><input id="firstName" required placeholder="Ex. Sabirou"></div>
+        <div class="field"><label>Nom *</label><input id="lastName" required placeholder="Ex. Tairou"></div>
+        <div class="field"><label>Date de naissance *</label><input id="birthDate" type="date" required></div>
+        <div class="field"><label>Téléphone *</label><input id="phone" type="tel" required placeholder="+229 XX XX XX XX"></div>
+        <div class="field"><label>Ville *</label><input id="city" required placeholder="Ex. Abomey-Calavi"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div class="step">02</div>
+        <div><h2>Ton statut</h2><p>Choisis la situation qui correspond à ton compte.</p></div>
+      </div>
+
+      <div class="status">
+        <label class="status-option active" id="adultOption">
+          <input type="radio" name="status" value="adult" checked>
+          <strong>👤 Je suis adulte</strong>
+          <small>Une pièce d'identité sera demandée.</small>
+        </label>
+
+        <label class="status-option" id="studentOption">
+          <input type="radio" name="status" value="student">
+          <strong>🎓 Je suis élève</strong>
+          <small>Une carte scolaire et les informations du tuteur seront demandées.</small>
+        </label>
+      </div>
+
+      <div id="adultDocument" class="doc-box" style="margin-top:15px">
+        <div class="doc-title">🪪 Photo de ma CNI</div>
+        <div class="doc-help">Ajoute une photo nette de ta Carte Nationale d'Identité. Les formats JPG, PNG ou WEBP sont acceptés.</div>
+        <label class="file-label">
+          📷 Choisir la photo de ma CNI
+          <input id="cniFile" type="file" accept="image/jpeg,image/png,image/webp">
+        </label>
+        <div class="preview" id="cniPreview">
+          <img id="cniImage" alt="Aperçu CNI">
+          <div class="file-name" id="cniName"></div>
+        </div>
+      </div>
+
+      <div id="studentDetails" class="hidden" style="margin-top:15px">
+        <div class="doc-box">
+          <div class="doc-title">🎓 Photo de ma carte scolaire</div>
+          <div class="doc-help">Ajoute une photo nette de ta carte scolaire. Elle servira à la vérification de ton statut d'élève.</div>
+          <label class="file-label">
+            📷 Choisir la photo de ma carte scolaire
+            <input id="schoolCardFile" type="file" accept="image/jpeg,image/png,image/webp">
+          </label>
+          <div class="preview" id="schoolPreview">
+            <img id="schoolImage" alt="Aperçu carte scolaire">
+            <div class="file-name" id="schoolName"></div>
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:16px">
+          <div class="field"><label>Nom de l'établissement *</label><input id="schoolEstablishment" placeholder="Nom de l'établissement"></div>
+          <div class="field"><label>Classe / niveau *</label><input id="schoolLevel" placeholder="Ex. 3e, 2nde, Terminale"></div>
+          <div class="field"><label>Nom et prénom du tuteur *</label><input id="guardianName" placeholder="Nom complet"></div>
+          <div class="field"><label>Numéro du tuteur *</label><input id="guardianPhone" type="tel" placeholder="+229 XX XX XX XX"></div>
+          <div class="field">
+            <label>Lien avec l'élève</label>
+            <select id="guardianRelation">
+              <option value="">Sélectionner</option>
+              <option>Père</option><option>Mère</option><option>Tuteur légal</option><option>Autre</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div class="step">03</div>
+        <div><h2>Sécuriser mon compte</h2><p>Choisis un mot de passe personnel.</p></div>
+      </div>
+
+      <div class="field password-wrap">
+        <label>Mot de passe *</label>
+        <input id="password" type="password" minlength="8" required placeholder="Minimum 8 caractères">
+        <button type="button" class="show" onclick="togglePassword()">Afficher</button>
+      </div>
+
+      <div class="field">
+        <label>Confirmer le mot de passe *</label>
+        <input id="passwordConfirm" type="password" minlength="8" required placeholder="Retape ton mot de passe">
+      </div>
+
+      <label class="terms">
+        <input id="terms" type="checkbox" required>
+        <span>J'accepte les <a href="#">conditions d'utilisation</a> de Corbeau.</span>
+      </label>
+    </div>
+
+    <div id="message" class="message"></div>
+    <button class="submit" id="submitButton" type="submit">Créer mon compte →</button>
+
+    <div class="login">Déjà inscrit ? <a href="#">Se connecter</a></div>
+  </form>
+
+  <footer>🐦‍⬛ CORBEAU — PLATEFORME D'OPPORTUNITÉS</footer>
+</div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://nmkpanyeswafuchmvcij.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta3Bhbnllc3dhZnVjaG12Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTcxNTIsImV4cCI6MjEwNTkzMzE1Mn0.fleM-nhlLGteYjbdmWIlkzsgQS-zs3cf38-hTVBiKm8";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let status = "adult";
+
+function setStatus(value){
+  status = value;
+  document.getElementById("adultOption").classList.toggle("active", value==="adult");
+  document.getElementById("studentOption").classList.toggle("active", value==="student");
+  document.getElementById("adultDocument").classList.toggle("hidden", value!=="adult");
+  document.getElementById("studentDetails").classList.toggle("hidden", value!=="student");
+  document.querySelector('input[value="'+value+'"]').checked = true;
+}
+
+document.getElementById("adultOption").addEventListener("click",()=>setStatus("adult"));
+document.getElementById("studentOption").addEventListener("click",()=>setStatus("student"));
+
+function setupPreview(inputId, previewId, imageId, nameId){
+  document.getElementById(inputId).addEventListener("change", function(){
+    const file=this.files[0];
+    if(!file)return;
+    if(!file.type.startsWith("image/")){
+      this.value="";
+      showMessage("Choisis une image JPG, PNG ou WEBP.","error");
+      return;
+    }
+    const reader=new FileReader();
+    reader.onload=e=>{
+      document.getElementById(imageId).src=e.target.result;
+      document.getElementById(nameId).textContent=file.name;
+      document.getElementById(previewId).classList.add("show");
+    };
+    reader.readAsDataURL(file);
+  });
+}
+setupPreview("cniFile","cniPreview","cniImage","cniName");
+setupPreview("schoolCardFile","schoolPreview","schoolImage","schoolName");
+
+function togglePassword(){
+  const a=document.getElementById("password"), b=document.getElementById("passwordConfirm");
+  const btn=document.querySelector(".show");
+  const visible=a.type==="text";
+  a.type=visible?"password":"text"; b.type=visible?"password":"text";
+  btn.textContent=visible?"Afficher":"Masquer";
+}
+
+function showMessage(text,type){
+  const el=document.getElementById("message");
+  el.textContent=text;
+  el.className="message show "+type;
+}
+
+document.getElementById("registrationForm").addEventListener("submit", async(e)=>{
+  e.preventDefault();
+
+  const firstName=document.getElementById("firstName").value.trim();
+  const lastName=document.getElementById("lastName").value.trim();
+  const birthDate=document.getElementById("birthDate").value;
+  const phone=document.getElementById("phone").value.trim();
+  const city=document.getElementById("city").value.trim();
+  const password=document.getElementById("password").value;
+  const confirm=document.getElementById("passwordConfirm").value;
+  const documentFile=status==="adult"
+    ? document.getElementById("cniFile").files[0]
+    : document.getElementById("schoolCardFile").files[0];
+
+  if(password.length<8)return showMessage("Le mot de passe doit contenir au moins 8 caractères.","error");
+  if(password!==confirm)return showMessage("Les deux mots de passe ne correspondent pas.","error");
+  if(!documentFile)return showMessage(status==="adult"?"Ajoute une photo de ta CNI.":"Ajoute une photo de ta carte scolaire.","error");
+
+  if(status==="student"){
+    if(!document.getElementById("schoolEstablishment").value.trim() ||
+       !document.getElementById("schoolLevel").value.trim() ||
+       !document.getElementById("guardianName").value.trim() ||
+       !document.getElementById("guardianPhone").value.trim()){
+      return showMessage("Complète les informations scolaires et celles du tuteur.","error");
+    }
+  }
+
+  const button=document.getElementById("submitButton");
+  button.disabled=true; button.textContent="Création du compte...";
+
+  try{
+    const {error}=await supabaseClient.auth.signUp({
+      phone:phone,
+      password:password,
+      options:{
+        data:{
+          first_name:firstName,
+          last_name:lastName,
+          birth_date:birthDate,
+          city:city,
+          account_type:"earner",
+          status:status,
+          document_type:status==="adult"?"cni":"school_card",
+          school_establishment:status==="student"?document.getElementById("schoolEstablishment").value.trim():null,
+          school_level:status==="student"?document.getElementById("schoolLevel").value.trim():null,
+          guardian_name:status==="student"?document.getElementById("guardianName").value.trim():null,
+          guardian_phone:status==="student"?document.getElementById("guardianPhone").value.trim():null,
+          guardian_relation:status==="student"?document.getElementById("guardianRelation").value:null
+        }
+      }
+    });
+
+    if(error)throw error;
+
+    showMessage("Compte créé. La vérification du téléphone et le stockage sécurisé du document seront finalisés avec Supabase Storage.","success");
+    document.getElementById("registrationForm").reset();
+    setStatus("adult");
+    document.getElementById("cniPreview").classList.remove("show");
+    document.getElementById("schoolPreview").classList.remove("show");
+  }catch(err){
+    console.error(err);
+    showMessage(err.message || "Une erreur est survenue pendant l'inscription.","error");
+  }finally{
+    button.disabled=false;
+    button.textContent="Créer mon compte →";
+  }
+});
+</script>
+</body>
+</html>
