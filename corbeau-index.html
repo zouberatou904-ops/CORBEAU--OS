@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#08060d">
+<title>Corbeau — Inscription</title>
+<style>
+:root{--bg:#08060d;--card:#14111d;--line:#332d40;--text:#faf9fc;--muted:#aaa4b5;--p:#8b5cf6;--p2:#5b21b6}
+*{box-sizing:border-box}body{margin:0;color:var(--text);font-family:Arial,system-ui,sans-serif;background:radial-gradient(circle at 50% 0,#28134b 0,transparent 35%),var(--bg)}
+main{max-width:760px;margin:auto;padding:25px 14px 50px}.brand{text-align:center;padding:8px 0 25px}.logo{width:88px;height:88px;filter:drop-shadow(0 10px 25px #6d28d955)}h1{font-size:clamp(34px,8vw,52px);margin:10px 0}h1 span{color:#a78bfa}.brand p{color:var(--muted);font-size:16px;line-height:1.5}
+.card{background:#14111df5;border:1px solid var(--line);border-radius:22px;box-shadow:0 25px 70px #0008;overflow:hidden}.head{padding:22px 20px 5px}.head h2{margin:0;font-size:23px}.head p{color:var(--muted);font-size:14px;line-height:1.5}form{padding:20px}.section{border-top:1px solid #ffffff0d;padding:20px 0}.section:first-child{border-top:0;padding-top:3px}.title{font-weight:800;font-size:16px;margin:0 0 15px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{margin-bottom:14px}label{display:block;font-size:14px;font-weight:700;margin-bottom:7px}.req{color:#fb7185}input{width:100%;padding:14px;border:1px solid #40384d;border-radius:14px;background:#0c0a10;color:white;font-size:16px;outline:0}input:focus{border-color:var(--p);box-shadow:0 0 0 3px #8b5cf622}input::placeholder{color:#706a79}
+.student{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:16px;border:1px solid #40384d;border-radius:17px;background:#0c0a10}.student strong{display:block}.student small{display:block;color:var(--muted);margin-top:5px;line-height:1.4}.switch{width:54px;height:30px;position:relative;flex:none}.switch input{opacity:0;width:0;height:0}.slider{position:absolute;inset:0;border-radius:30px;background:#393241;cursor:pointer}.slider:before{content:"";position:absolute;width:22px;height:22px;left:4px;top:4px;background:white;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:var(--p)}.switch input:checked+.slider:before{transform:translateX(24px)}
+#details{display:none;margin-top:14px;padding:16px;border-radius:17px;background:#8b5cf60d;border:1px solid #8b5cf655}#details.show{display:block}.upload{padding:15px;border:1px dashed #554c63;border-radius:15px;background:#0c0a10}.upload input{border:0;padding:0;background:transparent;font-size:14px}.hint{font-size:12px;color:var(--muted);line-height:1.45}.preview{display:none;max-width:100%;max-height:220px;margin-top:10px;border-radius:12px}
+.terms{display:flex;gap:10px;color:var(--muted);font-size:13px;line-height:1.5}.terms input{width:18px;height:18px;min-width:18px;accent-color:var(--p)}
+button{width:100%;padding:16px;border:0;border-radius:15px;background:linear-gradient(135deg,var(--p),var(--p2));color:white;font-size:16px;font-weight:800;cursor:pointer}button:disabled{opacity:.6}.notice{display:none;margin-top:14px;padding:13px;border-radius:12px;font-size:14px;line-height:1.45}.success{display:block;background:#22c55e18;border:1px solid #22c55e55;color:#bbf7d0}.footer{text-align:center;color:#777181;font-size:12px;padding-top:20px}
+@media(max-width:600px){main{padding:18px 12px 40px}.grid{grid-template-columns:1fr;gap:0}form{padding:17px}.logo{width:78px;height:78px}}
+</style>
+</head>
+<body>
+<main>
+<header class="brand">
+<svg class="logo" viewBox="0 0 120 120" aria-label="Logo Corbeau">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a78bfa"/><stop offset="1" stop-color="#5b21b6"/></linearGradient></defs>
+<circle cx="60" cy="60" r="54" fill="#100b18" stroke="url(#g)" stroke-width="3"/>
+<path fill="url(#g)" d="M26 74c12-2 19-10 25-19-1-10 4-20 13-25 5 7 6 14 3 20 9-3 17-1 25 5-4 2-8 3-12 3 6 5 9 11 9 18-8-5-16-6-24-4-8 8-19 11-32 8z"/>
+<path fill="white" d="M67 39l7 3-6 4z"/><circle cx="70" cy="41" r="2" fill="#111"/>
+<path fill="#8b5cf6" d="M48 82c9 5 19 6 29 2-6 8-16 12-28 8-5-2-9-5-12-9 4 1 7 0 11-1z"/>
+</svg>
+<h1>Bienvenue sur <span>Corbeau</span></h1>
+<p>Crée ton compte pour commencer ton activité et accéder aux opportunités proposées sur la plateforme.</p>
+</header>
+<section class="card">
+<div class="head"><h2>Créer mon compte</h2><p>Renseigne correctement tes informations. La vérification sera reliée à Supabase dans l'étape suivante.</p></div>
+<form id="form">
+<div class="section">
+<h3 class="title">Informations personnelles</h3>
+<div class="grid">
+<div class="field"><label>Prénom <span class="req">*</span></label><input name="prenom" placeholder="Ton prénom" required></div>
+<div class="field"><label>Nom <span class="req">*</span></label><input name="nom" placeholder="Ton nom" required></div>
+</div>
+<div class="grid">
+<div class="field"><label>Date de naissance <span class="req">*</span></label><input name="naissance" type="date" required></div>
+<div class="field"><label>Ville <span class="req">*</span></label><input name="ville" placeholder="Ex : Abomey-Calavi" required></div>
+</div>
+<div class="grid">
+<div class="field"><label>Téléphone <span class="req">*</span></label><input name="telephone" type="tel" placeholder="+229 00 00 00 00" required></div>
+<div class="field"><label>Email <span class="req">*</span></label><input name="email" type="email" placeholder="exemple@email.com" required></div>
+</div>
+<div class="field"><label>Mot de passe <span class="req">*</span></label><input name="password" type="password" minlength="8" placeholder="Au moins 8 caractères" required></div>
+</div>
+<div class="section">
+<h3 class="title">Situation</h3>
+<div class="student"><div><strong>Es-tu élève ?</strong><small>Active cette option si tu es actuellement élève.</small></div>
+<label class="switch"><input id="student" type="checkbox"><span class="slider"></span></label></div>
+<div id="details">
+<div class="field"><label>Nom de l'établissement <span class="req">*</span></label><input id="school" placeholder="Nom de ton école"></div>
+<div class="field"><label>Nom du tuteur / parent <span class="req">*</span></label><input id="guardian" placeholder="Nom complet du tuteur"></div>
+<div class="field"><label>Téléphone du tuteur / parent <span class="req">*</span></label><input id="guardianPhone" type="tel" placeholder="+229 00 00 00 00"></div>
+<div class="field"><label>Carte scolaire ou CNI <span class="req">*</span></label>
+<div class="upload"><input id="document" type="file" accept="image/*,.pdf"><div class="hint">Ajoute une photo nette de ta carte scolaire ou de ta CNI.</div><img id="preview" class="preview" alt="Aperçu"></div>
+</div></div></div></div>
+<div class="section"><label class="terms"><input type="checkbox" required><span>J'accepte les conditions d'utilisation de Corbeau et je certifie que les informations fournies sont exactes.</span></label></div>
+<button id="submit" type="submit">Créer mon compte</button>
+<div id="notice" class="notice"></div>
+</form>
+</section>
+<div class="footer">© <span id="year"></span> Corbeau — Plateforme d'activité et de vente.</div>
+</main>
+<script>
+const student=document.getElementById('student'),details=document.getElementById('details');
+const fields=[document.getElementById('school'),document.getElementById('guardian'),document.getElementById('guardianPhone'),document.getElementById('document')];
+student.addEventListener('change',()=>{details.classList.toggle('show',student.checked);fields.forEach(x=>x.required=student.checked)});
+document.getElementById('document').addEventListener('change',e=>{
+ const f=e.target.files[0],p=document.getElementById('preview');
+ if(f&&f.type.startsWith('image/')){const r=new FileReader();r.onload=()=>{p.src=r.result;p.style.display='block'};r.readAsDataURL(f)} else p.style.display='none';
+});
+document.getElementById('year').textContent=new Date().getFullYear();
+document.getElementById('form').addEventListener('submit',e=>{
+ e.preventDefault();
+ if(!e.target.checkValidity()){e.target.reportValidity();return}
+ const n=document.getElementById('notice');n.className='notice success';
+ n.textContent='Formulaire correctement rempli. La connexion réelle à Supabase sera activée dans l’étape suivante.';
+ document.getElementById('submit').textContent='Formulaire vérifié ✓';
+});
+</script>
+</body>
+</html>
