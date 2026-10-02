@@ -3,177 +3,750 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#050607">
-  <title>Corbeau — Créer mon compte</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="page-bg"></div>
 
-  <header class="topbar">
+  <meta name="theme-color" content="#050608">
+  <meta name="description" content="Corbeau — Une opportunité à portée de main">
+
+  <title>Corbeau — Inscription</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #050608;
+      color: #f1f3f5;
+      font-family: Arial, Helvetica, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* =========================
+       FOND
+    ========================= */
+
+    body::before {
+      content: "";
+      position: fixed;
+      width: 420px;
+      height: 420px;
+      top: -220px;
+      right: -180px;
+      background: #f5bd25;
+      opacity: 0.08;
+      filter: blur(100px);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      width: 350px;
+      height: 350px;
+      bottom: -180px;
+      left: -180px;
+      background: #f5bd25;
+      opacity: 0.05;
+      filter: blur(100px);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* =========================
+       HEADER
+    ========================= */
+
+    .header {
+      width: 100%;
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px 22px;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+
+      background: #f5bd25;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      color: #050608;
+      font-size: 29px;
+      font-weight: 900;
+
+      box-shadow:
+        0 0 0 1px rgba(245,189,37,.3),
+        0 8px 30px rgba(245,189,37,.15);
+    }
+
+    .brand-name {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 6px;
+    }
+
+    .brand-slogan {
+      margin-top: 4px;
+      color: #929aa5;
+      font-size: 12px;
+    }
+
+    .step-counter {
+      padding: 10px 16px;
+      border-radius: 30px;
+
+      background: #0d1117;
+      border: 1px solid #303742;
+
+      color: #f5bd25;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    /* =========================
+       CONTENU
+    ========================= */
+
+    .container {
+      width: 100%;
+      max-width: 1050px;
+      margin: auto;
+      padding: 35px 22px 60px;
+    }
+
+    .intro {
+      margin-bottom: 30px;
+    }
+
+    .eyebrow {
+      color: #f5bd25;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      margin-bottom: 14px;
+    }
+
+    .intro h1 {
+      font-size: clamp(40px, 7vw, 68px);
+      line-height: 1;
+      letter-spacing: -2px;
+      margin-bottom: 20px;
+    }
+
+    .intro h1 span {
+      color: #f5bd25;
+    }
+
+    .intro p {
+      max-width: 720px;
+      color: #aeb6c2;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* =========================
+       PROGRESSION
+    ========================= */
+
+    .progress-container {
+      width: 100%;
+      height: 7px;
+
+      background: #171c23;
+      border-radius: 20px;
+
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+
+    .progress {
+      width: 11.11%;
+      height: 100%;
+
+      background: #f5bd25;
+
+      border-radius: 20px;
+
+      transition: width .3s ease;
+    }
+
+    /* =========================
+       CARTE
+    ========================= */
+
+    .card {
+      background:
+        linear-gradient(
+          145deg,
+          #10151c,
+          #090c11
+        );
+
+      border: 1px solid #29313b;
+
+      border-radius: 24px;
+
+      padding: 30px;
+
+      box-shadow:
+        0 20px 60px rgba(0,0,0,.25);
+    }
+
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      margin-bottom: 25px;
+    }
+
+    .step-number {
+      width: 55px;
+      height: 55px;
+
+      flex-shrink: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #f5bd25;
+      color: #111;
+
+      border-radius: 16px;
+
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .step-title h2 {
+      font-size: 26px;
+      margin-bottom: 5px;
+    }
+
+    .step-title p {
+      color: #929ba7;
+      font-size: 14px;
+    }
+
+    .separator {
+      height: 1px;
+      background: #252c35;
+      margin-bottom: 25px;
+    }
+
+    /* =========================
+       FORMULAIRE
+    ========================= */
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      color: #e5e8ec;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+
+      padding: 15px;
+
+      background: #0b1016;
+      color: #f1f3f5;
+
+      border: 1px solid #35404b;
+      border-radius: 13px;
+
+      outline: none;
+
+      font-size: 16px;
+
+      transition: .2s;
+    }
+
+    .field input::placeholder,
+    .field textarea::placeholder {
+      color: #68727f;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: #f5bd25;
+
+      box-shadow:
+        0 0 0 3px rgba(245,189,37,.09);
+    }
+
+    /* =========================
+       ACTIONS
+    ========================= */
+
+    .actions {
+      display: flex;
+      gap: 15px;
+
+      margin-top: 22px;
+    }
+
+    .button {
+      flex: 1;
+
+      padding: 16px;
+
+      border-radius: 14px;
+
+      font-size: 16px;
+      font-weight: 900;
+
+      cursor: pointer;
+
+      transition: .2s;
+    }
+
+    .button-back {
+      background: #10151c;
+      color: #f1f3f5;
+
+      border: 1px solid #343d48;
+    }
+
+    .button-next {
+      background: linear-gradient(
+        90deg,
+        #ffd34b,
+        #efad10
+      );
+
+      color: #111;
+
+      border: none;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    .footer {
+      text-align: center;
+
+      padding: 35px 20px;
+
+      color: #606a77;
+
+      font-size: 11px;
+
+      letter-spacing: 3px;
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media (max-width: 700px) {
+
+      .header {
+        padding: 16px;
+      }
+
+      .logo {
+        width: 50px;
+        height: 50px;
+        font-size: 25px;
+      }
+
+      .brand-name {
+        font-size: 18px;
+        letter-spacing: 4px;
+      }
+
+      .brand-slogan {
+        font-size: 10px;
+      }
+
+      .step-counter {
+        padding: 9px 13px;
+      }
+
+      .container {
+        padding: 25px 15px 45px;
+      }
+
+      .intro h1 {
+        font-size: 46px;
+      }
+
+      .intro p {
+        font-size: 16px;
+      }
+
+      .card {
+        padding: 21px 17px;
+        border-radius: 20px;
+      }
+
+      .step-title h2 {
+        font-size: 22px;
+      }
+
+      .fields {
+        grid-template-columns: 1fr;
+      }
+
+      .field.full {
+        grid-column: auto;
+      }
+
+      .actions {
+        position: sticky;
+        bottom: 0;
+
+        padding: 12px 0;
+
+        background: rgba(5,6,8,.94);
+
+        backdrop-filter: blur(12px);
+
+        z-index: 20;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+
+  <header class="header">
+
     <div class="brand">
-      <div class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 80 80" role="img">
-          <circle cx="40" cy="40" r="36" class="gold-circle"/>
-          <path class="crow" d="M20 52c8-2 12-8 13-17 1-9 7-15 17-17-2 5-1 9 3 12 4 3 8 3 13 1-1 8-5 14-13 17-9 3-19 4-33 4zm26-28c2 0 4 1 6 3-3 0-5-1-6-3z"/>
-        </svg>
+
+      <div class="logo">
+        C
       </div>
+
       <div>
-        <div class="brand-name">CORBEAU</div>
-        <div class="brand-tagline">Une opportunité à portée de main</div>
+        <div class="brand-name">
+          CORBEAU
+        </div>
+
+        <div class="brand-slogan">
+          Une opportunité à portée de main
+        </div>
       </div>
+
     </div>
-    <div class="step-counter"><span id="currentStep">1</span> / 9</div>
+
+    <div class="step-counter">
+      <span id="stepNumber">1</span> / 9
+    </div>
+
   </header>
 
+
+  <!-- CONTENU -->
+
   <main class="container">
-    <section class="hero">
-      <div>
-        <div class="eyebrow">CRÉER MON COMPTE</div>
-        <h1>Bienvenue dans <span>Corbeau.</span></h1>
-        <p>Inscris-toi pour rejoindre la plateforme et commencer à développer tes revenus grâce aux opportunités proposées.</p>
+
+    <section class="intro">
+
+      <div class="eyebrow">
+        CRÉER MON COMPTE
       </div>
-      <div class="hero-crow" aria-hidden="true">
-        <svg viewBox="0 0 420 320">
-          <circle cx="285" cy="125" r="118" class="halo"/>
-          <path class="big-crow" d="M65 265c54-17 75-60 72-112-3-57 30-98 91-115-10 25-5 46 17 62 22 16 48 17 75 3-7 46-35 78-83 94-56 18-107 36-172 68z"/>
-          <path class="beak" d="M250 94l125 22-118 23z"/>
-          <circle cx="286" cy="98" r="7" class="eye"/>
-        </svg>
-      </div>
+
+      <h1>
+        Bienvenue dans
+        <span>Corbeau.</span>
+      </h1>
+
+      <p>
+        Inscris-toi pour rejoindre la plateforme
+        et commencer à découvrir les opportunités
+        proposées par Corbeau.
+      </p>
+
     </section>
 
-    <div class="progress">
-      <div id="progressBar"></div>
+
+    <!-- PROGRESSION -->
+
+    <div class="progress-container">
+      <div class="progress" id="progress"></div>
     </div>
 
-    <form id="registrationForm" novalidate>
-      <!-- 1 -->
-      <section class="screen active" data-step="1">
-        <div class="screen-head"><div class="num">01</div><div><h2>Informations personnelles</h2><p>Commençons par créer ton profil.</p></div></div>
-        <div class="grid two">
-          <label>Prénom *<input name="prenom" required placeholder="Ex. Sabirou"></label>
-          <label>Nom *<input name="nom" required placeholder="Ex. Tairou"></label>
-          <label>Date de naissance *<input name="naissance" type="date" required></label>
-          <label>Numéro de téléphone *<input name="telephone" type="tel" required placeholder="+229 XX XX XX XX"></label>
-          <label>Ville *<input name="ville" required placeholder="Ex. Abomey-Calavi"></label>
-          <label>Email *<input name="email" type="email" required placeholder="ton@email.com"></label>
-        </div>
-      </section>
 
-      <!-- 2 -->
-      <section class="screen" data-step="2">
-        <div class="screen-head"><div class="num">02</div><div><h2>Ton statut</h2><p>Cette information permet d'adapter ton parcours.</p></div></div>
-        <div class="choice-grid">
-          <label class="choice"><input type="radio" name="statut" value="eleve" required><span class="choice-icon">🎓</span><span><b>Je suis élève</b><small>J'étudie actuellement.</small></span></label>
-          <label class="choice"><input type="radio" name="statut" value="adulte"><span class="choice-icon">👤</span><span><b>Je suis adulte</b><small>Je souhaite accéder aux opportunités.</small></span></label>
-          <label class="choice"><input type="radio" name="statut" value="etudiant"><span class="choice-icon">📚</span><span><b>Je suis étudiant(e)</b><small>Je poursuis des études supérieures.</small></span></label>
-        </div>
-      </section>
+    <!-- CARTE INSCRIPTION -->
 
-      <!-- 3 -->
-      <section class="screen" data-step="3">
-        <div class="screen-head"><div class="num">03</div><div><h2>Informations scolaires</h2><p>À remplir si ton statut concerne les études.</p></div></div>
-        <div class="grid two">
-          <label>Nom de l'établissement<input name="etablissement" placeholder="Nom de ton établissement"></label>
-          <label>Classe / niveau<input name="niveau" placeholder="Ex. 3e, 2nde, Terminale..."></label>
-          <label>Numéro de carte scolaire<input name="carte" placeholder="Numéro de la carte"></label>
-          <label>Année scolaire<input name="annee" placeholder="Ex. 2026-2027"></label>
-        </div>
-        <div class="info-box">Ces informations servent uniquement à adapter ton parcours. Tu peux les compléter plus tard.</div>
-      </section>
+    <div class="card">
 
-      <!-- 4 -->
-      <section class="screen" data-step="4">
-        <div class="screen-head"><div class="num">04</div><div><h2>Informations du tuteur</h2><p>Si nécessaire, renseigne un responsable légal.</p></div></div>
-        <div class="grid two">
-          <label>Nom et prénom du tuteur<input name="tuteurNom" placeholder="Nom complet"></label>
-          <label>Numéro du tuteur<input name="tuteurTel" type="tel" placeholder="+229 XX XX XX XX"></label>
-          <label>Lien avec l'élève<select name="lien"><option value="">Sélectionner</option><option>Parent</option><option>Tuteur légal</option><option>Frère / sœur</option><option>Autre</option></select></label>
-          <label>Email du tuteur<input name="tuteurEmail" type="email" placeholder="email@exemple.com"></label>
-        </div>
-      </section>
+      <div class="step-title">
 
-      <!-- 5 -->
-      <section class="screen" data-step="5">
-        <div class="screen-head"><div class="num">05</div><div><h2>Pièce d'identité</h2><p>Prépare ton document pour la vérification du compte.</p></div></div>
-        <div class="choice-grid">
-          <label class="choice"><input type="radio" name="pieceType" value="cip" required><span class="choice-icon">🪪</span><span><b>Carte d'identité</b><small>Document national valide.</small></span></label>
-          <label class="choice"><input type="radio" name="pieceType" value="passeport"><span class="choice-icon">🛂</span><span><b>Passeport</b><small>Document de voyage valide.</small></span></label>
-          <label class="choice"><input type="radio" name="pieceType" value="autre"><span class="choice-icon">📄</span><span><b>Autre document</b><small>Selon les documents acceptés.</small></span></label>
+        <div class="step-number">
+          01
         </div>
-        <label class="upload">Téléverser le document
-          <input type="file" name="piece" accept="image/*,.pdf">
-          <span>📎 Choisir une photo ou un PDF</span>
-        </label>
-        <div class="info-box">Ne téléverse qu'un document qui t'appartient. Le stockage sécurisé pourra être connecté à Supabase dans une étape backend.</div>
-      </section>
 
-      <!-- 6 -->
-      <section class="screen" data-step="6">
-        <div class="screen-head"><div class="num">06</div><div><h2>Photo de profil</h2><p>Ajoute une photo pour personnaliser ton compte.</p></div></div>
-        <div class="avatar-area">
-          <div class="avatar" id="avatarPreview">👤</div>
-          <label class="upload compact">Choisir une photo
-            <input type="file" id="avatarInput" name="avatar" accept="image/*">
-            <span>📷 Importer une photo</span>
-          </label>
-        </div>
-        <div class="grid two">
-          <label>Nom d'utilisateur *<input name="username" required placeholder="Ex. sabirou229"></label>
-          <label>Code parrainage (facultatif)<input name="parrainage" placeholder="Ex. CORBEAU123"></label>
-        </div>
-      </section>
+        <div>
+          <h2>
+            Informations personnelles
+          </h2>
 
-      <!-- 7 -->
-      <section class="screen" data-step="7">
-        <div class="screen-head"><div class="num">07</div><div><h2>Mes préférences</h2><p>Choisis les opportunités qui t'intéressent.</p></div></div>
-        <div class="check-grid">
-          <label><input type="checkbox" name="interets" value="vente"> 🛍️ Vente</label>
-          <label><input type="checkbox" name="interets" value="affiliation"> 🔗 Affiliation</label>
-          <label><input type="checkbox" name="interets" value="parrainage"> 👥 Parrainage</label>
-          <label><input type="checkbox" name="interets" value="microtaches"> ⚡ Micro-tâches</label>
-          <label><input type="checkbox" name="interets" value="sondages"> 📊 Sondages</label>
-          <label><input type="checkbox" name="interets" value="formation"> 🎓 Formations</label>
+          <p>
+            Commençons par créer ton profil.
+          </p>
         </div>
-      </section>
 
-      <!-- 8 -->
-      <section class="screen" data-step="8">
-        <div class="screen-head"><div class="num">08</div><div><h2>Sécuriser mon compte</h2><p>Choisis un mot de passe personnel.</p></div></div>
-        <div class="grid two">
-          <label>Mot de passe *<div class="password"><input name="password" type="password" minlength="8" required placeholder="Minimum 8 caractères"><button type="button" data-toggle="password">👁</button></div></label>
-          <label>Confirmer le mot de passe *<div class="password"><input name="confirmPassword" type="password" minlength="8" required placeholder="Retape ton mot de passe"><button type="button" data-toggle="confirmPassword">👁</button></div></label>
-        </div>
-        <div class="security-list">
-          <span id="lengthRule">○ 8 caractères minimum</span>
-          <span id="numberRule">○ Au moins un chiffre</span>
-          <span id="specialRule">○ Un caractère spécial</span>
-        </div>
-        <label class="agree"><input type="checkbox" name="conditions" required> J'accepte les <u>conditions d'utilisation</u> de Corbeau.</label>
-      </section>
+      </div>
 
-      <!-- 9 -->
-      <section class="screen" data-step="9">
-        <div class="screen-head"><div class="num">09</div><div><h2>Vérifier et créer mon compte</h2><p>Relis tes informations avant de terminer.</p></div></div>
-        <div id="summary" class="summary"></div>
-        <div class="success-preview">
-          <div>🖤</div>
-          <strong>Prêt à rejoindre Corbeau ?</strong>
-          <p>En cliquant sur « Créer mon compte », tes informations seront préparées pour l'enregistrement sécurisé.</p>
+
+      <div class="separator"></div>
+
+
+      <!-- ÉTAPE 1 -->
+
+      <div id="step1">
+
+        <div class="fields">
+
+          <div class="field">
+
+            <label>
+              Prénom *
+            </label>
+
+            <input
+              type="text"
+              placeholder="Ex. Sabirou"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Nom *
+            </label>
+
+            <input
+              type="text"
+              placeholder="Ex. Tairou"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Date de naissance *
+            </label>
+
+            <input
+              type="date"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Numéro de téléphone *
+            </label>
+
+            <input
+              type="tel"
+              placeholder="+229 XX XX XX XX"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Ville *
+            </label>
+
+            <input
+              type="text"
+              placeholder="Ex. Abomey-Calavi"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>
+              Adresse e-mail *
+            </label>
+
+            <input
+              type="email"
+              placeholder="ton@email.com"
+            >
+
+          </div>
+
         </div>
-      </section>
+
+      </div>
+
+
+      <!-- ACTIONS -->
 
       <div class="actions">
-        <button type="button" id="prevBtn" class="btn secondary">← Retour</button>
-        <button type="button" id="nextBtn" class="btn primary">Continuer →</button>
-      </div>
-    </form>
 
-    <footer>🐦 CORBEAU — PLATEFORME D'OPPORTUNITÉS</footer>
+        <button
+          type="button"
+          class="button button-back"
+          id="backButton"
+          disabled
+        >
+          ← Retour
+        </button>
+
+        <button
+          type="button"
+          class="button button-next"
+          id="nextButton"
+        >
+          Continuer →
+        </button>
+
+      </div>
+
+    </div>
+
   </main>
 
-  <div id="toast" class="toast"></div>
-  <script src="script.js"></script>
+
+  <footer class="footer">
+    CORBEAU — PLATEFORME D'OPPORTUNITÉS
+  </footer>
+
+
+  <script>
+
+    let currentStep = 1;
+
+    const totalSteps = 9;
+
+    const stepNumber =
+      document.getElementById("stepNumber");
+
+    const progress =
+      document.getElementById("progress");
+
+    const nextButton =
+      document.getElementById("nextButton");
+
+    const backButton =
+      document.getElementById("backButton");
+
+
+    function updateProgress() {
+
+      stepNumber.textContent =
+        currentStep;
+
+      const percentage =
+        (currentStep / totalSteps) * 100;
+
+      progress.style.width =
+        percentage + "%";
+
+    }
+
+
+    nextButton.addEventListener(
+      "click",
+      function () {
+
+        if (currentStep < totalSteps) {
+
+          currentStep++;
+
+          updateProgress();
+
+          /*
+           * Pour l'instant nous affichons
+           * l'étape suivante visuellement.
+           * Les 9 écrans seront ajoutés
+           * dans la prochaine version.
+           */
+
+          alert(
+            "Étape " +
+            currentStep +
+            " / 9 — nous allons maintenant construire cet écran."
+          );
+
+        }
+
+      }
+    );
+
+
+    backButton.addEventListener(
+      "click",
+      function () {
+
+        if (currentStep > 1) {
+
+          currentStep--;
+
+          updateProgress();
+
+        }
+
+      }
+    );
+
+
+    updateProgress();
+
+  </script>
+
 </body>
-</html>
+              </html>
