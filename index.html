@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Projet Corbeau - Inscription</title>
-  <!-- Tailwind CSS via CDN : Pas besoin de fichier .css séparé -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- SDK Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 flex items-center justify-center min-h-screen p-4">
@@ -17,9 +15,9 @@
       <p class="text-xs text-slate-400">Plateforme de Distribution & Vente pour Élèves</p>
     </div>
 
-    <!-- Onglets fixes -->
+    <!-- Navigation Onglets -->
     <div class="flex border-b border-slate-800 text-sm font-semibold">
-      <a href="connexion.html" class="w-1/2 py-2 text-center text-slate-500">Connexion</a>
+      <a href="connexion.html" class="w-1/2 py-2 text-center text-slate-500 hover:text-slate-300">Connexion</a>
       <div class="w-1/2 py-2 text-center border-b-2 border-cyan-400 text-cyan-400">Inscription</div>
     </div>
 
@@ -48,7 +46,7 @@
         </select>
       </div>
 
-      <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl transition">
+      <button type="submit" id="btnSubmit" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl transition">
         Créer Mon Compte
       </button>
 
@@ -59,15 +57,13 @@
   </div>
 
   <script>
-    // Config Supabase
     const SUPABASE_URL = "https://nmkpanyeswafuchmvclj.supabase.co";
     const SUPABASE_ANON_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta3Bhbnllc3dhZnVjaG12Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTcxNTIsImV4cCI6MjEwNTkzMzE1Mn0.fleM-nhlLGteYjbdmWIlkzsgQS-zs3cf38-hTVBiKm8";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Gestion de la soumission du formulaire d'inscription
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn = e.target.querySelector('button');
+      const btn = document.getElementById('btnSubmit');
       btn.innerText = "Création en cours...";
       btn.disabled = true;
 
@@ -75,9 +71,8 @@
       const password = document.getElementById('password').value;
       const fullName = document.getElementById('fullName').value;
       const role = document.getElementById('role').value;
-      const email = `${phone.replace(/[^0-9]/g, '')}@corbeau.app`; // Email virtuel
+      const email = `${phone.replace(/[^0-9]/g, '')}@corbeau.app`;
 
-      // 1. Inscription dans Supabase Auth
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
       
       if (signUpError) {
@@ -87,19 +82,18 @@
         return;
       }
 
-      // 2. Création du profil dans la table 'profiles'
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([{ id: signUpData.user.id, full_name: fullName, phone, role }]);
       
       if (profileError) {
-        alert("Erreur de profil : " + profileError.message);
+        alert("Erreur de création de profil : " + profileError.message);
         btn.innerText = "Créer Mon Compte";
         btn.disabled = false;
         return;
       }
 
-      alert("Compte créé ! Redirection vers la connexion...");
+      alert("Compte créé avec succès ! Redirection vers la page de connexion...");
       window.location.href = 'connexion.html';
     });
   </script>
