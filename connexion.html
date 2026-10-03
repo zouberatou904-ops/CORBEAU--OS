@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projet Corbeau - Connexion</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 flex items-center justify-center min-h-screen p-4">
+
+  <div class="w-full max-w-md bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl space-y-6">
+    <div class="text-center space-y-2">
+      <h1 class="text-3xl font-extrabold text-cyan-400">PROJET CORBEAU</h1>
+      <p class="text-xs text-slate-400">Plateforme de Distribution & Vente pour Élèves</p>
+    </div>
+
+    <!-- Navigation Onglets -->
+    <div class="flex border-b border-slate-800 text-sm font-semibold">
+      <div class="w-1/2 py-2 text-center border-b-2 border-cyan-400 text-cyan-400">Connexion</div>
+      <a href="index.html" class="w-1/2 py-2 text-center text-slate-500 hover:text-slate-300">Inscription</a>
+    </div>
+
+    <!-- Formulaire de Connexion -->
+    <form id="loginForm" class="space-y-4 text-xs">
+      <div>
+        <label class="block mb-1 text-slate-300">Numéro de Téléphone</label>
+        <input type="tel" id="phone" required placeholder="+229 90 00 00 00" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block mb-1 text-slate-300">Mot de Passe</label>
+        <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
+      </div>
+
+      <button type="submit" id="btnSubmit" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl transition">
+        Se Connecter
+      </button>
+
+      <div class="text-center mt-4">
+        <p class="text-slate-400">Vous n'avez pas de compte ? <a href="index.html" class="text-cyan-400 hover:underline">S'inscrire</a></p>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://nmkpanyeswafuchmvclj.supabase.co";
+    const SUPABASE_ANON_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta3Bhbnllc3dhZnVjaG12Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTcxNTIsImV4cCI6MjEwNTkzMzE1Mn0.fleM-nhlLGteYjbdmWIlkzsgQS-zs3cf38-hTVBiKm8";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmit');
+      btn.innerText = "Connexion en cours...";
+      btn.disabled = true;
+
+      const phone = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value;
+      const email = `${phone.replace(/[^0-9]/g, '')}@corbeau.app`;
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        alert("Erreur de connexion : " + error.message);
+        btn.innerText = "Se Connecter";
+        btn.disabled = false;
+        return;
+      }
+
+      alert("Connexion réussie !");
+    });
+  </script>
+</body>
+</html>
