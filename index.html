@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Projet Corbeau - Inscription</title>
+  <!-- Tailwind CSS via CDN : Pas besoin de fichier .css séparé -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SDK Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 flex items-center justify-center min-h-screen p-4">
@@ -15,17 +17,17 @@
       <p class="text-xs text-slate-400">Plateforme de Distribution & Vente pour Élèves</p>
     </div>
 
-    <!-- Onglets Connexion / Inscription -->
+    <!-- Onglets fixes -->
     <div class="flex border-b border-slate-800 text-sm font-semibold">
-      <button id="tabAuth" onclick="switchMode('auth')" class="w-1/2 py-2 text-slate-500">Connexion</button>
-      <button id="tabRegister" onclick="switchMode('register')" class="w-1/2 py-2 border-b-2 border-cyan-400 text-cyan-400">Inscription</button>
+      <a href="connexion.html" class="w-1/2 py-2 text-center text-slate-500">Connexion</a>
+      <div class="w-1/2 py-2 text-center border-b-2 border-cyan-400 text-cyan-400">Inscription</div>
     </div>
 
-    <!-- Formulaire -->
-    <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4 text-xs">
-      <div id="fullNameGroup"> <!-- Pas de 'hidden' ici, car par défaut inscription -->
+    <!-- Formulaire d'Inscription -->
+    <form id="registerForm" class="space-y-4 text-xs">
+      <div>
         <label class="block mb-1 text-slate-300">Nom Complet</label>
-        <input type="text" id="fullName" placeholder="Ex: Jean Dupont" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
+        <input type="text" id="fullName" required placeholder="Ex: Jean Dupont" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
       </div>
 
       <div>
@@ -38,7 +40,7 @@
         <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
       </div>
 
-      <div id="roleGroup"> <!-- Pas de 'hidden' ici, car par défaut inscription -->
+      <div>
         <label class="block mb-1 text-slate-300">Vous êtes :</label>
         <select id="role" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
           <option value="vendeur">👨‍🎓 Élève / Vendeur</option>
@@ -46,102 +48,60 @@
         </select>
       </div>
 
-      <button type="submit" id="btnSubmit" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl transition">
+      <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl transition">
         Créer Mon Compte
       </button>
 
-      <!-- Lien vers la page de connexion -->
-      <div id="loginLinkGroup" class="text-center mt-4">
-        <p class="text-slate-400">Vous avez déjà un compte ? <a href="#" onclick="switchMode('auth')" class="text-cyan-400 hover:underline">Se connecter</a></p>
+      <div class="text-center mt-4">
+        <p class="text-slate-400">Vous avez déjà un compte ? <a href="connexion.html" class="text-cyan-400 hover:underline">Se connecter</a></p>
       </div>
     </form>
   </div>
 
-  <!-- TOUT LE SCRIPT EST MAINTENANT ICI, APRÈS LE HTML -->
   <script>
-    // Configuration de votre client Supabase (nmkpanyeswafuchmvclj)
+    // Config Supabase
     const SUPABASE_URL = "https://nmkpanyeswafuchmvclj.supabase.co";
     const SUPABASE_ANON_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta3Bhbnllc3dhZnVjaG12Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTcxNTIsImV4cCI6MjEwNTkzMzE1Mn0.fleM-nhlLGteYjbdmWIlkzsgQS-zs3cf38-hTVBiKm8";
-
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // MODE PAR DÉFAUT SUR 'register'
-    let mode = 'register';
-
-    function switchMode(newMode) {
-      console.log("Mode switch called with: ", newMode); // Test de débogage pour s'assurer que le script s'exécute
-
-      mode = newMode;
-      const isRegister = mode === 'register';
-
-      // Groupes de champs
-      document.getElementById('fullNameGroup').classList.toggle('hidden', !isRegister);
-      document.getElementById('roleGroup').classList.toggle('hidden', !isRegister);
-
-      // Styles d'onglets (Tailwind)
-      // Onglet Inactif par défaut : tabAuth
-      document.getElementById('tabAuth').className = isRegister ? 'w-1/2 py-2 text-slate-500' : 'w-1/2 py-2 border-b-2 border-cyan-400 text-cyan-400';
-      // Onglet Actif par défaut : tabRegister
-      document.getElementById('tabRegister').className = isRegister ? 'w-1/2 py-2 border-b-2 border-cyan-400 text-cyan-400' : 'w-1/2 py-2 text-slate-500';
-
-      // Texte du bouton
-      document.getElementById('btnSubmit').innerText = isRegister ? "Créer Mon Compte" : "Se Connecter";
-
-      // Cacher le lien inférieur si on est sur la page de connexion
-      document.getElementById('loginLinkGroup').classList.toggle('hidden', !isRegister);
-    }
-
-    async function handleAuth(e) {
+    // Gestion de la soumission du formulaire d'inscription
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.innerText = "Création en cours...";
+      btn.disabled = true;
+
       const phone = document.getElementById('phone').value.trim();
       const password = document.getElementById('password').value;
-      const email = `${phone.replace(/[^0-9]/g, '')}@corbeau.app`; // Email virtuel basé sur le téléphone
+      const fullName = document.getElementById('fullName').value;
+      const role = document.getElementById('role').value;
+      const email = `${phone.replace(/[^0-9]/g, '')}@corbeau.app`; // Email virtuel
 
-      if (mode === 'register') {
-        const fullName = document.getElementById('fullName').value;
-        const role = document.getElementById('role').value;
-
-        // Inscription avec l'email virtuel
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
-        if (signUpError) return alert("Erreur d'inscription : " + signUpError.message);
-
-        // Enregistrement dans la table "profiles"
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{ id: signUpData.user.id, full_name: fullName, phone, role }]);
-        
-        if (profileError) {
-          // Si l'insertion de profil échoue, on supprime l'utilisateur créé pour pouvoir réessayer
-          await supabase.auth.admin.deleteUser(signUpData.user.id);
-          return alert("Erreur de création du profil : " + profileError.message);
-        }
-
-        alert("Compte créé avec succès !");
-        redirectUser(role);
-      } else {
-        // Connexion avec l'email virtuel
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return alert("Erreur de connexion : " + error.message);
-
-        // Récupération du rôle depuis la table "profiles"
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-        
-        redirectUser(profile?.role || 'vendeur');
+      // 1. Inscription dans Supabase Auth
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+      
+      if (signUpError) {
+        alert("Erreur d'inscription : " + signUpError.message);
+        btn.innerText = "Créer Mon Compte";
+        btn.disabled = false;
+        return;
       }
-    }
 
-    function redirectUser(role) {
-      // Pour l'instant, toutes les pages sont en index.html pour tester l'authentification
-      alert("Authentification réussie ! Vous allez être redirigé vers votre espace " + role);
-      // Exemple de redirection (décommentez quand les autres fichiers seront sur GitHub) :
-      // if (role === 'fournisseur') window.location.href = 'supplier.html';
-      // else if (role === 'admin') window.location.href = 'admin.html';
-      // else window.location.href = 'dashboard-vendeur.html';
-    }
+      // 2. Création du profil dans la table 'profiles'
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([{ id: signUpData.user.id, full_name: fullName, phone, role }]);
+      
+      if (profileError) {
+        alert("Erreur de profil : " + profileError.message);
+        btn.innerText = "Créer Mon Compte";
+        btn.disabled = false;
+        return;
+      }
+
+      alert("Compte créé ! Redirection vers la connexion...");
+      window.location.href = 'connexion.html';
+    });
   </script>
 </body>
 </html>
