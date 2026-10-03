@@ -23,7 +23,6 @@
 
     <!-- Formulaire -->
     <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4 text-xs">
-      <!-- NOM COMPLET : AFFICHE PAR DÉFAUT -->
       <div id="fullNameGroup">
         <label class="block mb-1 text-slate-300">Nom Complet</label>
         <input type="text" id="fullName" placeholder="Ex: Jean Dupont" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
@@ -39,7 +38,6 @@
         <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
       </div>
 
-      <!-- ROLE : AFFICHE PAR DÉFAUT -->
       <div id="roleGroup">
         <label class="block mb-1 text-slate-300">Vous êtes :</label>
         <select id="role" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
@@ -48,10 +46,14 @@
         </select>
       </div>
 
-      <!-- BOUTON : CRÉER MON COMPTE -->
       <button type="submit" id="btnSubmit" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl transition">
         Créer Mon Compte
       </button>
+
+      <!-- Lien vers la page de connexion -->
+      <div class="text-center mt-4">
+        <p class="text-slate-400">Vous avez déjà un compte ? <a href="#" onclick="switchMode('auth')" class="text-cyan-400 hover:underline">Se connecter</a></p>
+      </div>
     </form>
   </div>
 
@@ -62,7 +64,6 @@
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // MODIFICATION 1 : MODE PAR DÉFAUT SUR 'register'
     let mode = 'register';
 
     function switchMode(newMode) {
