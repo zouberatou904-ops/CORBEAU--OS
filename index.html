@@ -52,6 +52,7 @@
     </form>
   </div>
 
+  <!-- TOUT LE SCRIPT EST MAINTENANT ICI, APRÈS LE HTML -->
   <script>
     // Configuration de votre client Supabase (nmkpanyeswafuchmvclj)
     const SUPABASE_URL = "https://nmkpanyeswafuchmvclj.supabase.co";
@@ -62,6 +63,8 @@
     let mode = 'auth';
 
     function switchMode(newMode) {
+      console.log("Mode switch called with: ", newMode); // Débogage : vérifier si la fonction est appelée
+
       mode = newMode;
       const isRegister = mode === 'register';
       document.getElementById('fullNameGroup').classList.toggle('hidden', !isRegister);
