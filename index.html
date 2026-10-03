@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projet Corbeau - Connexion</title>
+  <title>Projet Corbeau - Inscription</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -17,13 +17,14 @@
 
     <!-- Onglets Connexion / Inscription -->
     <div class="flex border-b border-slate-800 text-sm font-semibold">
-      <button id="tabAuth" onclick="switchMode('auth')" class="w-1/2 py-2 border-b-2 border-cyan-400 text-cyan-400">Connexion</button>
-      <button id="tabRegister" onclick="switchMode('register')" class="w-1/2 py-2 text-slate-500">Inscription</button>
+      <button id="tabAuth" onclick="switchMode('auth')" class="w-1/2 py-2 text-slate-500">Connexion</button>
+      <button id="tabRegister" onclick="switchMode('register')" class="w-1/2 py-2 border-b-2 border-cyan-400 text-cyan-400">Inscription</button>
     </div>
 
     <!-- Formulaire -->
     <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4 text-xs">
-      <div id="fullNameGroup" class="hidden">
+      <!-- NOM COMPLET : AFFICHE PAR DÉFAUT -->
+      <div id="fullNameGroup">
         <label class="block mb-1 text-slate-300">Nom Complet</label>
         <input type="text" id="fullName" placeholder="Ex: Jean Dupont" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
       </div>
@@ -38,7 +39,8 @@
         <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
       </div>
 
-      <div id="roleGroup" class="hidden">
+      <!-- ROLE : AFFICHE PAR DÉFAUT -->
+      <div id="roleGroup">
         <label class="block mb-1 text-slate-300">Vous êtes :</label>
         <select id="role" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
           <option value="vendeur">👨‍🎓 Élève / Vendeur</option>
@@ -46,13 +48,13 @@
         </select>
       </div>
 
+      <!-- BOUTON : CRÉER MON COMPTE -->
       <button type="submit" id="btnSubmit" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl transition">
-        Se Connecter
+        Créer Mon Compte
       </button>
     </form>
   </div>
 
-  <!-- TOUT LE SCRIPT EST MAINTENANT ICI, APRÈS LE HTML -->
   <script>
     // Configuration de votre client Supabase (nmkpanyeswafuchmvclj)
     const SUPABASE_URL = "https://nmkpanyeswafuchmvclj.supabase.co";
@@ -60,15 +62,15 @@
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let mode = 'auth';
+    // MODIFICATION 1 : MODE PAR DÉFAUT SUR 'register'
+    let mode = 'register';
 
     function switchMode(newMode) {
-      console.log("Mode switch called with: ", newMode); // Débogage : vérifier si la fonction est appelée
-
       mode = newMode;
       const isRegister = mode === 'register';
       document.getElementById('fullNameGroup').classList.toggle('hidden', !isRegister);
       document.getElementById('roleGroup').classList.toggle('hidden', !isRegister);
+      
       document.getElementById('tabAuth').className = isRegister ? 'w-1/2 py-2 text-slate-500' : 'w-1/2 py-2 border-b-2 border-cyan-400 text-cyan-400';
       document.getElementById('tabRegister').className = isRegister ? 'w-1/2 py-2 border-b-2 border-cyan-400 text-cyan-400' : 'w-1/2 py-2 text-slate-500';
       document.getElementById('btnSubmit').innerText = isRegister ? "Créer Mon Compte" : "Se Connecter";
