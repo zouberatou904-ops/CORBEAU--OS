@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projet Corbeau - Bureau Administrateur</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col md:flex-row">
+
+  <!-- Barre de Navigation Latérale (Sidebar) -->
+  <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 p-5 space-y-6">
+    <div class="text-center md:text-left">
+      <h1 class="text-2xl font-black text-cyan-400 tracking-wider">CORBEAU OS</h1>
+      <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Bureau de Contrôle Admin</p>
+    </div>
+
+    <nav class="flex md:flex-col overflow-x-auto gap-2 text-xs font-semibold pb-2 md:pb-0">
+      <button onclick="showTab('users')" id="btn-users" class="tab-btn flex items-center gap-2 p-3 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 whitespace-nowrap">
+        <span>👥</span> Utilisateurs
+      </button>
+      <button onclick="showTab('stock')" id="btn-stock" class="tab-btn flex items-center gap-2 p-3 rounded-xl text-slate-400 hover:bg-slate-800 whitespace-nowrap">
+        <span>📦</span> Dépôts de Stock
+      </button>
+      <button onclick="showTab('orders')" id="btn-orders" class="tab-btn flex items-center gap-2 p-3 rounded-xl text-slate-400 hover:bg-slate-800 whitespace-nowrap">
+        <span>🚚</span> Commandes Directes
+      </button>
+      <button onclick="showTab('reports')" id="btn-reports" class="tab-btn flex items-center gap-2 p-3 rounded-xl text-slate-400 hover:bg-slate-800 whitespace-nowrap">
+        <span>📊</span> Rapports du Soir
+      </button>
+      <button onclick="showTab('announcements')" id="btn-announcements" class="tab-btn flex items-center gap-2 p-3 rounded-xl text-slate-400 hover:bg-slate-800 whitespace-nowrap">
+        <span>📢</span> Annonces
+      </button>
+      <button onclick="showTab('tickets')" id="btn-tickets" class="tab-btn flex items-center gap-2 p-3 rounded-xl text-slate-400 hover:bg-slate-800 whitespace-nowrap">
+        <span>🎫</span> Support & Tickets
+      </button>
+      <button onclick="showTab('products')" id="btn-products" class="tab-btn flex items-center gap-2 p-3 rounded-xl text-slate-400 hover:bg-slate-800 whitespace-nowrap">
+        <span>🛍️</span> Produits & Prix
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Zone de Contenu Principal -->
+  <main class="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto">
+
+    <!-- 1. GESTION DES UTILISATEURS -->
+    <section id="tab-users" class="tab-content space-y-4">
+      <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
+        <h2 class="text-lg font-bold text-white">Validation des Comptes Inscrits</h2>
+        <span class="text-xs text-slate-400">Table: <code class="text-cyan-400">profiles</code></span>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="bg-slate-950 text-slate-400 uppercase text-[10px]">
+            <tr>
+              <th class="p-3">Nom</th>
+              <th class="p-3">Téléphone</th>
+              <th class="p-3">Rôle</th>
+              <th class="p-3">Statut</th>
+              <th class="p-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="table-users" class="divide-y divide-slate-800"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 2. GESTION DU STOCK -->
+    <section id="tab-stock" class="tab-content hidden space-y-4">
+      <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
+        <h2 class="text-lg font-bold text-white">Validation des Dépôts de Stock</h2>
+        <span class="text-xs text-slate-400">Table: <code class="text-cyan-400">stock_deposits</code></span>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div id="list-stock" class="text-xs text-slate-400">Chargement des dépôts...</div>
+      </div>
+    </section>
+
+    <!-- 3. COMMANDES DIRECTES -->
+    <section id="tab-orders" class="tab-content hidden space-y-4">
+      <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
+        <h2 class="text-lg font-bold text-white">Commandes Livraison Directe Client</h2>
+        <span class="text-xs text-slate-400">Table: <code class="text-cyan-400">direct_orders</code></span>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div id="list-orders" class="text-xs text-slate-400">Chargement des commandes...</div>
+      </div>
+    </section>
+
+    <!-- 4. RAPPORTS DU SOIR -->
+    <section id="tab-reports" class="tab-content hidden space-y-4">
+      <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
+        <h2 class="text-lg font-bold text-white">Contrôle des Rapports du Soir (Vendeurs)</h2>
+        <span class="text-xs text-slate-400">Table: <code class="text-cyan-400">evening_reports</code></span>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div id="list-reports" class="text-xs text-slate-400">Chargement des rapports...</div>
+      </div>
+    </section>
+
+    <!-- 5. ANNONCES -->
+    <section id="tab-announcements" class="tab-content hidden space-y-4">
+      <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
+        <h2 class="text-lg font-bold text-white">Publier une Annonce Générale</h2>
+        <span class="text-xs text-slate-400">Table: <code class="text-cyan-400">announcements</code></span>
+      </div>
+      <form id="form-announcement" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <input type="text" id="ann-title" placeholder="Titre de l'annonce" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-cyan-500">
+        <textarea id="ann-content" placeholder="Contenu du message..." required rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-cyan-500"></textarea>
+        <button type="submit" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">Diffuser l'Annonce</button>
+      </form>
+    </section>
+
+    <!-- 6. SUPPORT & TICKETS -->
+    <section id="tab-tickets" class="tab-content hidden space-y-4">
+      <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
+        <h2 class="text-lg font-bold text-white">Tickets de Support & Réclamations</h2>
+        <span class="text-xs text-slate-400">Table: <code class="text-cyan-400">support_tickets</code></span>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div id="list-tickets" class="text-xs text-slate-400">Chargement des tickets...</div>
+      </div>
+    </section>
+
+    <!-- 7. GESTION DES PRODUITS -->
+    <section id="tab-products" class="tab-content hidden space-y-4">
+      <div class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-800">
+        <h2 class="text-lg font-bold text-white">Catalogue & Prix des Produits</h2>
+        <span class="text-xs text-slate-400">Table: <code class="text-cyan-400">products</code></span>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div id="list-products" class="text-xs text-slate-400">Chargement des produits...</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://nmkpanyeswafuchmvclj.supabase.co";
+    const SUPABASE_ANON_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta3Bhbnllc3dhZnVjaG12Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTcxNTIsImV4cCI6MjEwNTkzMzE1Mn0.fleM-nhlLGteYjbdmWIlkzsgQS-zs3cf38-hTVBiKm8";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Navigation Onglets
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.className = 'tab-btn flex items-center gap-2 p-3 rounded-xl text-slate-400 hover:bg-slate-800 whitespace-nowrap';
+      });
+
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`btn-${tabName}`);
+      activeBtn.className = 'tab-btn flex items-center gap-2 p-3 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 whitespace-nowrap';
+
+      // Rechargement des données selon l'onglet
+      if (tabName === 'users') loadUsers();
+      if (tabName === 'stock') loadStock();
+      if (tabName === 'orders') loadOrders();
+      if (tabName === 'reports') loadReports();
+      if (tabName === 'tickets') loadTickets();
+      if (tabName === 'products') loadProducts();
+    }
+
+    // 1. Charger Utilisateurs
+    async function loadUsers() {
+      const { data: profiles } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      const tbody = document.getElementById('table-users');
+      if (!profiles || profiles.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Aucun utilisateur.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = profiles.map(u => `
+        <tr class="hover:bg-slate-800/50">
+          <td class="p-3 font-semibold text-white">${u.full_name || 'N/A'}</td>
+          <td class="p-3">${u.phone || 'N/A'}</td>
+          <td class="p-3 capitalize">${u.role || 'vendeur'}</td>
+          <td class="p-3">
+            <span class="px-2 py-1 rounded-full text-[10px] font-bold ${u.status === 'actif' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}">
+              ${u.status || 'en_attente'}
+            </span>
+          </td>
+          <td class="p-3 text-right">
+            ${u.status !== 'actif' ? `<button onclick="approveUser('${u.id}')" class="bg-emerald-500 text-slate-950 font-bold px-3 py-1 rounded-lg">Valider</button>` : '<span class="text-slate-500">Actif</span>'}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function approveUser(id) {
+      await supabase.from('profiles').update({ status: 'actif' }).eq('id', id);
+      loadUsers();
+    }
+
+    // 2. Charger Stock
+    async function loadStock() {
+      const { data } = await supabase.from('stock_deposits').select('*');
+      document.getElementById('list-stock').innerHTML = data && data.length ? JSON.stringify(data) : "Aucun dépôt en attente.";
+    }
+
+    // 3. Charger Commandes
+    async function loadOrders() {
+      const { data } = await supabase.from('direct_orders').select('*');
+      document.getElementById('list-orders').innerHTML = data && data.length ? JSON.stringify(data) : "Aucune commande directe.";
+    }
+
+    // 4. Charger Rapports
+    async function loadReports() {
+      const { data } = await supabase.from('evening_reports').select('*');
+      document.getElementById('list-reports').innerHTML = data && data.length ? JSON.stringify(data) : "Aucun rapport du soir soumis.";
+    }
+
+    // 5. Publier Annonce
+    document.getElementById('form-announcement').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('ann-title').value;
+      const content = document.getElementById('ann-content').value;
+      const { error } = await supabase.from('announcements').insert([{ title, content }]);
+      if (error) alert("Erreur : " + error.message);
+      else { alert("Annonce diffusée !"); e.target.reset(); }
+    });
+
+    // 6. Charger Tickets
+    async function loadTickets() {
+      const { data } = await supabase.from('support_tickets').select('*');
+      document.getElementById('list-tickets').innerHTML = data && data.length ? JSON.stringify(data) : "Aucun ticket de support.";
+    }
+
+    // 7. Charger Produits
+    async function loadProducts() {
+      const { data } = await supabase.from('products').select('*');
+      document.getElementById('list-products').innerHTML = data && data.length ? JSON.stringify(data) : "Aucun produit dans le catalogue.";
+    }
+
+    // Initialisation
+    loadUsers();
+  </script>
+</body>
+      </html>
+      
