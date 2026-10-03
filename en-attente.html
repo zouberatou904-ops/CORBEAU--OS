@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projet Corbeau - Compte en Attente</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 flex items-center justify-center min-h-screen p-4">
+
+  <div class="w-full max-w-md bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-xl text-center space-y-6">
+    <div class="w-16 h-16 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-2xl font-bold">
+      ⏳
+    </div>
+
+    <div class="space-y-2">
+      <h1 class="text-2xl font-extrabold text-white">Compte en Attente</h1>
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Votre inscription a bien été enregistrée. Un administrateur doit valider votre compte depuis le bureau avant que vous puissiez accéder à votre espace.
+      </p>
+    </div>
+
+    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl text-left space-y-1">
+      <p class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Statut actuel</p>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+        <span class="text-xs font-bold text-amber-400">En cours de vérification par le bureau</span>
+      </div>
+    </div>
+
+    <div class="pt-2 space-y-2">
+      <button onclick="checkStatus()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl transition text-xs">
+        Vérifier si mon compte est validé
+      </button>
+      <a href="connexion.html" class="block text-xs text-slate-500 hover:text-slate-400">
+        Se déconnecter / Retour à la connexion
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://nmkpanyeswafuchmvclj.supabase.co";
+    const SUPABASE_ANON_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ta3Bhbnllc3dhZnVjaG12Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNTcxNTIsImV4cCI6MjEwNTkzMzE1Mn0.fleM-nhlLGteYjbdmWIlkzsgQS-zs3cf38-hTVBiKm8";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function checkStatus() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = 'connexion.html';
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('status, role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile && profile.status === 'actif') {
+        alert("Félicitations ! Votre compte a été validé.");
+        if (profile.role === 'fournisseur') window.location.href = 'supplier.html';
+        else window.location.href = 'dashboard-vendeur.html';
+      } else {
+        alert("Votre compte est toujours en attente de validation.");
+      }
+    }
+  </script>
+</body>
+</html>
