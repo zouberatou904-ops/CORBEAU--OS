@@ -23,7 +23,7 @@
 
     <!-- Formulaire -->
     <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4 text-xs">
-      <div id="fullNameGroup">
+      <div id="fullNameGroup"> <!-- Pas de 'hidden' ici, car par défaut inscription -->
         <label class="block mb-1 text-slate-300">Nom Complet</label>
         <input type="text" id="fullName" placeholder="Ex: Jean Dupont" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
       </div>
@@ -38,7 +38,7 @@
         <input type="password" id="password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
       </div>
 
-      <div id="roleGroup">
+      <div id="roleGroup"> <!-- Pas de 'hidden' ici, car par défaut inscription -->
         <label class="block mb-1 text-slate-300">Vous êtes :</label>
         <select id="role" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:border-cyan-500 focus:outline-none">
           <option value="vendeur">👨‍🎓 Élève / Vendeur</option>
@@ -51,12 +51,13 @@
       </button>
 
       <!-- Lien vers la page de connexion -->
-      <div class="text-center mt-4">
+      <div id="loginLinkGroup" class="text-center mt-4">
         <p class="text-slate-400">Vous avez déjà un compte ? <a href="#" onclick="switchMode('auth')" class="text-cyan-400 hover:underline">Se connecter</a></p>
       </div>
     </form>
   </div>
 
+  <!-- TOUT LE SCRIPT EST MAINTENANT ICI, APRÈS LE HTML -->
   <script>
     // Configuration de votre client Supabase (nmkpanyeswafuchmvclj)
     const SUPABASE_URL = "https://nmkpanyeswafuchmvclj.supabase.co";
@@ -64,17 +65,30 @@
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // MODE PAR DÉFAUT SUR 'register'
     let mode = 'register';
 
     function switchMode(newMode) {
+      console.log("Mode switch called with: ", newMode); // Test de débogage pour s'assurer que le script s'exécute
+
       mode = newMode;
       const isRegister = mode === 'register';
+
+      // Groupes de champs
       document.getElementById('fullNameGroup').classList.toggle('hidden', !isRegister);
       document.getElementById('roleGroup').classList.toggle('hidden', !isRegister);
-      
+
+      // Styles d'onglets (Tailwind)
+      // Onglet Inactif par défaut : tabAuth
       document.getElementById('tabAuth').className = isRegister ? 'w-1/2 py-2 text-slate-500' : 'w-1/2 py-2 border-b-2 border-cyan-400 text-cyan-400';
+      // Onglet Actif par défaut : tabRegister
       document.getElementById('tabRegister').className = isRegister ? 'w-1/2 py-2 border-b-2 border-cyan-400 text-cyan-400' : 'w-1/2 py-2 text-slate-500';
+
+      // Texte du bouton
       document.getElementById('btnSubmit').innerText = isRegister ? "Créer Mon Compte" : "Se Connecter";
+
+      // Cacher le lien inférieur si on est sur la page de connexion
+      document.getElementById('loginLinkGroup').classList.toggle('hidden', !isRegister);
     }
 
     async function handleAuth(e) {
@@ -91,7 +105,7 @@
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) return alert("Erreur d'inscription : " + signUpError.message);
 
-        // Enregistrement dans la table "profiles" que vous avez créée
+        // Enregistrement dans la table "profiles"
         const { error: profileError } = await supabase
           .from('profiles')
           .insert([{ id: signUpData.user.id, full_name: fullName, phone, role }]);
