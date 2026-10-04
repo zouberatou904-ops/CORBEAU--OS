@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corbeau Production — Publier un produit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+
+  <a href="index.html" class="back-link">← Retour</a>
+  <h1 class="title">Corbeau Production</h1>
+  <p class="subtitle">Publie tes produits à vendre sur Corbeau</p>
+
+  <form id="prodForm">
+    <label for="nom">Nom du produit</label>
+    <input type="text" id="nom" required>
+
+    <label for="description">Description</label>
+    <input type="text" id="description" placeholder="Courte description">
+
+    <label for="prix">Prix de vente (FCFA, prix payé par l'acheteur)</label>
+    <input type="number" id="prix" min="1" required>
+
+    <label for="stock">Quantité disponible</label>
+    <input type="number" id="stock" min="1" required>
+
+    <label for="age">Âge minimum du revendeur (0 = tout le monde)</label>
+    <input type="number" id="age" min="0" value="0" required>
+
+    <div class="file-input-wrap">
+      Photo du produit
+      <input type="file" id="photo" accept="image/*">
+    </div>
+
+    <div class="status-banner en_attente" style="margin-top:4px">
+      ℹ️ Après envoi, l'équipe Corbeau confirme le pourcentage retenu avant la mise en ligne.
+    </div>
+
+    <div id="formMsg" class="form-msg"></div>
+    <button type="submit" class="btn-primary" id="submitBtn">Proposer ce produit</button>
+  </form>
+
+  <div class="section-title" style="margin-top:30px">Mes produits proposés</div>
+  <div id="myProducts"><div class="empty-history">Chargement...</div></div>
+
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+      Accueil
+    </a>
+    <a href="corbeau-catalogue.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+      Catalogue
+    </a>
+    <a href="portefeuille.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      Portefeuille
+    </a>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="corbeau-production.js"></script>
+</body>
+</html>
