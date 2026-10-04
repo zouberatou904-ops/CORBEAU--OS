@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corbeau — Portefeuille</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+
+  <a href="index.html" class="back-link">← Retour</a>
+  <h1 class="title">Portefeuille Corbeau</h1>
+  <p class="subtitle">Transfère tes gains vers BS WOLD CASH pour les retirer</p>
+
+  <div class="wallet-small">
+    <div class="balance-label">Solde Corbeau</div>
+    <div class="balance-amount" id="soldeCorbeauK">0.00<span class="unit">K</span></div>
+    <div class="balance-fcfa" id="soldeCorbeauFcfa">≈ 0 FCFA</div>
+  </div>
+
+  <label for="montant">Montant à transférer (K)</label>
+  <div class="amount-row">
+    <input type="number" id="montant" step="0.1" min="0.01" placeholder="0.00">
+    <span class="amount-all" id="amountAll">Tout transférer</span>
+  </div>
+
+  <div id="formMsg" class="form-msg"></div>
+  <button class="btn-primary" id="transferBtn" style="margin-top:14px">Transférer vers BS WOLD CASH</button>
+
+  <div class="info-note" style="margin-top:20px">
+    <span>ℹ️</span>
+    <span>Une fois transféré, l'argent est disponible dans ton solde BS WOLD CASH, retirable par Mobile Money depuis là-bas.</span>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+      Accueil
+    </a>
+    <a href="corbeau-catalogue.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+      Catalogue
+    </a>
+    <a href="portefeuille.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h13v4"/><path d="M3 7v11a2 2 0 002 2h15V9H5a2 2 0 01-2-2z"/></svg>
+      Portefeuille
+    </a>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="portefeuille.js"></script>
+</body>
+</html>
