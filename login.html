@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corbeau — Connexion</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+
+  <svg class="hero-logo" viewBox="0 0 60 60">
+    <rect x="2" y="2" width="56" height="56" rx="16" fill="#123330"/>
+    <path d="M18 40 L18 20 M18 20 L28 20 Q35 20 35 27 Q35 33 28 33 L20 33" stroke="#1FB6A8" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M38 40 L44 24 L50 40" stroke="#E8B95C" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="hero-wordmark">CORBEAU</div>
+
+  <h1 class="title">Connexion</h1>
+  <p class="subtitle">Utilise le même email et le même code que sur BS WOLD CASH</p>
+
+  <form id="loginForm">
+    <div class="field-icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#1FB6A8" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      <input type="email" id="email" placeholder="Gmail / Email" required>
+    </div>
+
+    <label for="code">Code d'accès</label>
+    <input type="text" id="code" class="otp-input" placeholder="000000" maxlength="6" inputmode="numeric" required>
+
+    <div id="formMsg" class="form-msg"></div>
+
+    <button type="submit" class="btn-primary" id="submitBtn">Se connecter</button>
+  </form>
+
+  <div class="switch-link">Pas encore de compte ? <a href="https://bs-wold.vercel.app/register.html">S'inscrire sur BS WOLD CASH</a></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="login.js"></script>
+</body>
+</html>
