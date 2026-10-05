@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BS WOLD CASH — Administration</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+
+  <div class="hero-wordmark" style="text-align:left;margin-top:14px">BS <span>WOLD</span> ADMIN</div>
+
+  <div id="gate"><div class="empty-history">Vérification...</div></div>
+
+  <div id="adminApp" style="display:none">
+    <div class="admin-tabs">
+      <div class="admin-tab active" data-tab="candidatures">Vendeurs</div>
+      <div class="admin-tab" data-tab="produits">Produits Corbeau</div>
+      <div class="admin-tab" data-tab="retraits">Retraits</div>
+      <div class="admin-tab" data-tab="livraisons">Livraisons</div>
+      <div class="admin-tab" data-tab="ventesCorbeau">Dépôts Corbeau</div>
+    </div>
+
+    <div class="admin-panel visible" id="panel-candidatures">
+      <div id="listCandidatures"><div class="empty-history">Chargement...</div></div>
+    </div>
+
+    <div class="admin-panel" id="panel-produits">
+      <div id="listProduits"><div class="empty-history">Chargement...</div></div>
+    </div>
+
+    <div class="admin-panel" id="panel-retraits">
+      <div id="listRetraits"><div class="empty-history">Chargement...</div></div>
+      <div class="section-title" style="margin-top:20px">Retraits fournisseurs</div>
+      <div id="listRetraitsFour"><div class="empty-history">Chargement...</div></div>
+    </div>
+
+    <div class="admin-panel" id="panel-livraisons">
+      <div id="listLivraisons"><div class="empty-history">Chargement...</div></div>
+    </div>
+
+    <div class="admin-panel" id="panel-ventesCorbeau">
+      <div id="listVentesCorbeau"><div class="empty-history">Chargement...</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
