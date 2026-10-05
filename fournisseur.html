@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corbeau Fournisseur</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.fx-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.fx-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px}
+.fx-label{font-size:12px;opacity:.7}.fx-val{font-size:19px;font-weight:700;margin-top:4px}
+.fx-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden}
+.fx-bar i{display:block;height:100%;background:#1FB6A8}.fx-bar i.low{background:#e5534b}
+.fx-chart{display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:10px}
+.fx-chart div{flex:1;text-align:center;font-size:10px;opacity:.9}
+.fx-chart b{display:block;background:#1FB6A8;border-radius:4px 4px 0 0;min-height:2px}
+.fx-btn{display:block;width:100%;margin-top:8px;padding:10px;border:0;border-radius:12px;background:#2ee077;color:#062;font-weight:700}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="tableau-de-bord.html" class="back-link">← Retour</a>
+  <h1 class="title">Espace fournisseur</h1>
+  <p class="subtitle">Suivi de tes produits et de tes gains</p>
+
+  <div class="fx-grid">
+    <div class="fx-card"><div class="fx-label">Chiffre d'affaires</div><div class="fx-val" id="kCA">0 F</div></div>
+    <div class="fx-card"><div class="fx-label">Produits actifs</div><div class="fx-val" id="kActifs">0</div></div>
+    <div class="fx-card"><div class="fx-label">Solde disponible</div><div class="fx-val" id="kSolde">0 F</div>
+      <button class="fx-btn" id="openRetrait">Retirer</button></div>
+    <div class="fx-card"><div class="fx-label">En attente</div><div class="fx-val" id="kAttente">0 F</div>
+      <div class="fx-label" style="margin-top:6px">ventes à confirmer</div></div>
+  </div>
+
+  <a href="corbeau-production.html" class="btn-primary" style="display:block;text-align:center;text-decoration:none">+ Proposer un produit</a>
+
+  <div class="section-title" style="margin-top:24px">Mes produits</div>
+  <div id="produits"><div class="empty-history">Chargement...</div></div>
+
+  <div class="section-title" style="margin-top:24px">Ventes 7 jours</div>
+  <div class="fx-card"><div class="fx-chart" id="chart"></div><div class="fx-label" id="chartTotal" style="margin-top:8px"></div></div>
+
+  <div class="section-title" style="margin-top:24px">Mes retraits</div>
+  <div id="retraits"><div class="empty-history">Chargement...</div></div>
+
+  <div class="bottom-nav">
+    <a href="tableau-de-bord.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Accueil</a>
+    <a href="corbeau-catalogue.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>Catalogue</a>
+    <a href="portefeuille.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h13v4"/><path d="M3 7v11a2 2 0 002 2h15V9H5a2 2 0 01-2-2z"/></svg>Portefeuille</a>
+  </div>
+</div>
+
+<div class="cb-detail-overlay" id="overlay">
+  <div class="cb-detail-sheet">
+    <div class="cb-detail-close" id="closeOverlay">✕</div>
+    <div class="cb-detail-name">Retirer des fonds</div>
+    <label for="methode">Méthode</label>
+    <select id="methode"><option>MTN Mobile Money</option><option>Moov Money</option><option>Celtiis Cash</option></select>
+    <label for="numero">Numéro de réception</label>
+    <input type="tel" id="numero" placeholder="+229 ...">
+    <label for="montant">Montant (FCFA)</label>
+    <input type="number" id="montant" min="1">
+    <div class="qty-total" id="recap"></div>
+    <div id="formMsg" class="form-msg"></div>
+    <button class="btn-primary" id="confirmRetrait" style="margin-top:14px">Confirmer le retrait</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="fournisseur.js"></script>
+</body>
+</html>
