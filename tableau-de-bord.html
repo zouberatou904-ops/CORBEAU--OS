@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corbeau — Tableau de bord</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="page">
+
+  <div class="db-topbar">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 60 60">
+        <rect x="2" y="2" width="56" height="56" rx="16" fill="#123330"/>
+        <path d="M18 40 L18 20 M18 20 L28 20 Q35 20 35 27 Q35 33 28 33 L20 33" stroke="#1FB6A8" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M38 40 L44 24 L50 40" stroke="#E8B95C" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="brand-name" style="font-size:14px">CORBEAU</div>
+      <span class="hero-wordmark" style="font-size:10px;margin:0 0 0 6px;color:var(--teal)">AFFILIATION & TERRAIN</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="db-wallet-pill">💼 <span class="amt" id="pillSolde">0 FCFA</span></div>
+      <div class="db-avatar" id="avatarInitial">?</div>
+    </div>
+  </div>
+
+  <div class="db-toggle-group" style="margin-bottom:14px">
+    <div class="db-toggle-pill">Web</div>
+    <div class="db-toggle-pill off">Terrain</div>
+  </div>
+
+  <div class="db-date-row">
+    <div>
+      <h1 class="title" style="margin:0;font-size:20px">Tableau de bord</h1>
+      <div class="subtitle" style="margin:2px 0 0" id="dateLine">Vue d'ensemble</div>
+    </div>
+    <div class="db-sync-badge"><i></i>Synchronisé</div>
+  </div>
+
+  <a id="adminLink" href="admin.html" style="display:none;margin:0 0 14px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(31,182,168,.18),rgba(232,185,92,.18));border:1px solid rgba(232,185,92,.45);color:var(--text-main);font-weight:600;font-size:14px;text-decoration:none;text-align:center">⚙️ Bureau admin</a>
+
+  <div class="db-grid">
+    <div class="db-stat highlight">
+      <div class="db-stat-icon">📦</div>
+      <div class="db-stat-label">Stock à la maison</div>
+      <div class="db-stat-value" id="statStock">0 pcs</div>
+      <div class="db-progress-row">
+        <div class="db-progress-track"><div class="db-progress-fill" id="statStockBar" style="width:0%"></div></div>
+        <span class="pct" id="statStockPct">0%</span>
+      </div>
+    </div>
+    <div class="db-stat">
+      <div class="db-stat-icon">🛒</div>
+      <div class="db-stat-label">Ventes d'aujourd'hui</div>
+      <div class="db-stat-value" id="statVentesJour">0 article(s)</div>
+    </div>
+    <div class="db-stat">
+      <div class="db-stat-icon">📊</div>
+      <div class="db-stat-label">À reverser (en attente)</div>
+      <div class="db-stat-value" id="statAReverser">0 F</div>
+    </div>
+    <div class="db-stat">
+      <div class="db-stat-icon">📈</div>
+      <div class="db-stat-label">Gains semaine</div>
+      <div class="db-stat-value" id="statGainsSemaine">0 F</div>
+    </div>
+  </div>
+
+  <div class="db-closing-banner">
+    <div class="title2">🌙 Clôture de soirée</div>
+    <p>Déclare ce que tu as vendu aujourd'hui et reverse l'argent correspondant.</p>
+    <button class="btn-primary" id="openRapportBtn" style="margin:0">Soumettre mon rapport du soir →</button>
+  </div>
+
+  <div class="section-title">Mon stock physique</div>
+  <div id="stockTableWrap" style="margin-bottom:22px"><div class="empty-history">Chargement...</div></div>
+
+  <div class="db-wallet-card">
+    <div class="db-wallet-card-head">
+      <div>
+        <div class="balance-label">Portefeuille Corbeau</div>
+        <div class="balance-amount" id="walletK" style="font-size:24px">0.00<span class="unit">K</span></div>
+      </div>
+      <div class="db-sync-badge"><i></i>Synchronisé</div>
+    </div>
+    <div class="db-wallet-buttons">
+      <button class="admin-btn-ok" onclick="window.location.href='portefeuille.html'">Transférer</button>
+      <button class="db-wallet-secondary" onclick="location.reload()">Actualiser</button>
+    </div>
+  </div>
+
+  <div class="section-title">Derniers rapports</div>
+  <div id="reversementsList"><div class="empty-history">Chargement...</div></div>
+
+  <div class="bottom-nav">
+    <a href="tableau-de-bord.html" class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+      Accueil
+    </a>
+    <a href="corbeau-catalogue.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+      Catalogue
+    </a>
+    <a href="portefeuille.html" class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h13v4"/><path d="M3 7v11a2 2 0 002 2h15V9H5a2 2 0 01-2-2z"/></svg>
+      Portefeuille
+    </a>
+  </div>
+
+</div>
+
+<div class="cb-detail-overlay" id="overlay">
+  <div class="cb-detail-sheet">
+    <div class="cb-detail-close" id="closeOverlay">✕</div>
+    <div class="cb-detail-name">Rapport du soir</div>
+
+    <label for="selectProduit">Quel produit as-tu vendu ?</label>
+    <select id="selectProduit" style="width:100%;padding:13px;background:var(--bg-panel);border:1px solid #232b2e;border-radius:12px;color:var(--text-main);font-size:14px"></select>
+
+    <label for="qteVendue" style="margin-top:10px">Combien d'unités vendues aujourd'hui ?</label>
+    <input type="number" id="qteVendue" min="1" value="1">
+
+    <div class="qty-total" id="recapVente" style="margin-top:10px"></div>
+
+    <div id="rapportMsg" class="form-msg"></div>
+    <button class="btn-primary" id="submitRapportBtn" style="margin-top:10px">Confirmer et déclarer</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="tableau-de-bord.js"></script>
+</body>
+</html>
