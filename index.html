@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>Corbeau</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app"></div>
+<div id="sheet" class="overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true">
+    <button class="x" type="button" data-act="close" aria-label="Fermer"></button>
+    <div class="sheet-body"></div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+(function () {
+  var C = window.C, sb = C.sb, $ = C.$, esc = C.esc, F = C.F, svg = C.svg, ICON = C.ICON, toast = C.toast, fdate = C.fdate;
+  var KEY = "corbeau_code";
+  var state = { code: null, me: null, produits: [], ventes: [], mouvs: [], tab: "boutique", view: "home", sel: null };
+
+  $(".x").innerHTML = svg(ICON.close, 22);
+
+  /* ---------- données ---------- */
+  function msg(e) {
+    var m = (e && e.message) || "";
+    if (/Failed to fetch|NetworkError|network/i.test(m)) return "Connexion impossible. Vérifie ton internet.";
+    return m || "Une erreur est survenue.";
+  }
+  async function loadMe() {
+    var r = await sb.rpc("connexion", { p_code: state.code });
+    if (r.error) throw r.error;
+    state.me = r.data;
+  }
+  async function loadProduits() {
+    var r = await sb.from("produits").select("*").eq("actif", true).order("cree_le", { ascending: false });
+    if (!r.error) state.produits = r.data || [];
+  }
+  async function loadVentes() {
+    var r = await sb.rpc("mes_ventes", { p_code: state.code });
+    if (!r.error) state.ventes = r.data || [];
+  }
+  async function loadMouvs() {
+    var r = await sb.rpc("mes_mouvements", { p_code: state.code });
+    if (!r.error) state.mouvs = r.data || [];
+  }
+  async function enter(code) {
+    state.code = code;
+    await loadMe();
+    C.store(KEY, code);
+    await loadProduits();
+    state.view = "dash";
+    state.tab = "boutique";
+  }
+
+  /* ---------- écrans ---------- */
+  function homeHTML() {
+    return '<div class="wrap home">' +
+      '<img class="logo" src="logo.png" alt="Logo Corbeau : un corbeau en vol avec une pièce d\'or dans le bec">' +
+      "<h1>Vends. Gagne.<br>Chaque semaine.</h1>" +
+      '<p class="lead">Des produits réels, remis par Corbeau. Tu les vends autour de toi, on te paie.</p>' +
+      '<ul class="perks">' +
+      '<li><span class="ico">' + svg(ICON.box) + "</span>Des produits réels, livrés par Corbeau</li>" +
+      '<li><span class="ico">' + svg(ICON.coin) + "</span>30 % de commission sur chaque vente</li>" +
+      '<li><span class="ico">' + svg(ICON.cal) + "</span>Paiement chaque semaine sur ton compte</li></ul>" +
+      '<div class="grow"></div>' +
+      '<button class="btn" type="button" data-act="start">Commencer ' + svg(ICON.arrow) + "</button>" +
+      '<p class="note">Ton accès t\'a été envoyé sur WhatsApp.</p></div>';
+  }
+
+  function codeHTML() {
+    return '<div class="wrap pad">' +
+      '<button class="back" type="button" data-act="home">' + svg(ICON.back) + " Retour</button>" +
+      '<h1 style="font-size:32px;margin:16px 0 8px">Ton code d\'accès</h1>' +
+      '<p class="muted" style="margin:0 0 20px">Tu l\'as reçu sur WhatsApp. Tu le tapes une seule fois.</p>' +
+      '<form data-form="code">' +
+      '<label class="lbl" for="code">Code d\'accès</label>' +
+      '<input class="field code" id="code" name="code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" required>' +
+      '<p class="err" id="err" role="alert"></p>' +
+      '<button class="btn" type="submit">Entrer</button></form></div>';
+  }
+
+  function headerHTML() {
+    return '<header class="top"><div class="mini"><img src="logo.png" alt="Corbeau"></div>' +
+      '<a class="pill" href="https://wa.me/' + C.cfg.WHATSAPP + '" target="_blank" rel="noopener">' + svg(ICON.chat, 18) + " Aide WhatsApp</a></header>";
+  }
+  function balanceHTML() {
+    return '<div class="bal"><div class="row1"><span>Mon solde</span><span class="coin">' + svg(ICON.coin, 18) + "</span></div>" +
+      '<div class="num">' + F(state.me.solde) + '</div><span class="tag">Payé chaque semaine</span></div>';
+  }
+  function gainOf(p, q) { return Math.floor((p.prix * q * p.commission_pct) / 100); }
+
+  function boutiqueHTML() {
+    var cards = state.produits.map(function (p) {
+      var photo = p.photo_url && /^https?:\/\//.test(p.photo_url)
+        ? '<img class="ph" src="' + esc(p.photo_url) + '" alt="' + esc(p.nom) + '" loading="lazy">'
+        : '<div class="ph">PHOTO À VENIR</div>';
+      return '<button class="pcard" type="button" data-act="product" data-id="' + esc(p.id) + '">' + photo +
+        '<div class="pn">' + esc(p.nom) + '</div><div class="pf"><span>' + F(p.prix) +
+        '</span><span class="badge ok">+ ' + F(gainOf(p, 1)) + "</span></div></button>";
+    }).join("");
+    return headerHTML() + balanceHTML() + '<h2 class="t">Produits du moment</h2>' +
+      (cards ? '<div class="grid">' + cards + "</div>" : '<p class="empty">Aucun produit pour le moment.</p>');
+  }
+
+  function ventesHTML() {
+    var names = {};
+    state.produits.forEach(function (p) { names[p.id] = p.nom; });
+    var lab = { declaree: ["En attente", ""], confirmee: ["Confirmée", "ok"], rejetee: ["Rejetée", "no"] };
+    var rows = state.ventes.map(function (v) {
+      var l = lab[v.statut] || ["", ""];
+      return '<li class="item"><div><strong>' + esc(names[v.produit_id] || "Produit") + "</strong> × " + v.quantite +
+        '<div class="muted" style="font-size:14px">' + fdate(v.cree_le) + " · " + F(v.montant) +
+        '</div></div><div class="r"><span>+ ' + F(v.gain) + '</span><span class="badge ' + l[1] + '">' + l[0] + "</span></div></li>";
+    }).join("");
+    return '<h2 class="t" style="margin-top:0">Mes ventes</h2>' +
+      (rows ? '<ul class="list">' + rows + "</ul>" : '<p class="empty">Tu n\'as pas encore déclaré de vente.<br>Choisis un produit dans la Boutique.</p>');
+  }
+
+  function portefeuilleHTML() {
+    var lab = { vente: "Vente confirmée", paiement: "Paiement reçu", retrait: "Retrait", ajustement: "Ajustement" };
+    var rows = state.mouvs.map(function (m) {
+      var neg = m.montant < 0;
+      return '<li class="item"><div><strong>' + (lab[m.type] || "Mouvement") + '</strong><div class="muted" style="font-size:14px">' +
+        fdate(m.cree_le) + (m.note && m.type !== "vente" ? " · " + esc(m.note) : "") + '</div></div><div class="r"><span>' +
+        (neg ? "− " : "+ ") + F(Math.abs(m.montant)) + "</span></div></li>";
+    }).join("");
+    return '<h2 class="t" style="margin-top:0">Portefeuille</h2>' + balanceHTML() +
+      '<div style="margin:16px 0"><button class="btn gold" type="button" data-act="retrait">Retirer de l\'argent</button></div>' +
+      '<h2 class="t">Historique</h2>' +
+      (rows ? '<ul class="list">' + rows + "</ul>" : '<p class="empty">Aucun mouvement pour le moment.</p>');
+  }
+
+  function compteHTML() {
+    return '<h2 class="t" style="margin-top:0">Mon compte</h2>' +
+      '<div class="card"><div class="muted" style="font-size:14px">Nom</div><strong style="font-size:18px">' + esc(state.me.nom) + "</strong></div>" +
+      '<p class="muted">Ton accès est enregistré sur ce téléphone. Tu n\'as pas besoin de retaper ton code.</p>' +
+      '<a class="btn soft" href="https://wa.me/' + C.cfg.WHATSAPP + '" target="_blank" rel="noopener">' + svg(ICON.chat) + " Écrire à Corbeau</a>" +
+      '<div style="height:12px"></div><button class="btn soft" type="button" data-act="logout">Se déconnecter</button>';
+  }
+
+  var TABS = [["boutique", "Boutique", "shop"], ["ventes", "Mes ventes", "chart"], ["portefeuille", "Portefeuille", "wallet"], ["compte", "Compte", "user"]];
+  function dashHTML() {
+    var body = { boutique: boutiqueHTML, ventes: ventesHTML, portefeuille: portefeuilleHTML, compte: compteHTML }[state.tab]();
+    var nav = TABS.map(function (t) {
+      var on = state.tab === t[0];
+      return '<button class="tab' + (on ? " on" : "") + '" type="button" data-act="tab" data-tab="' + t[0] + '"' + (on ? ' aria-current="page"' : "") + ">" + svg(ICON[t[2]], 24) + "<span>" + t[1] + "</span></button>";
+    }).join("");
+    return '<div class="wrap"><main class="pad">' + body + '</main><nav class="tabs" aria-label="Navigation principale">' + nav + "</nav></div>";
+  }
+
+  function render() {
+    var h = state.view === "home" ? homeHTML() : state.view === "code" ? codeHTML() : dashHTML();
+    $("#app").innerHTML = h;
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- fenêtre du bas ---------- */
+  function openSheet(html) {
+    var s = $("#sheet");
+    $(".sheet-body", s).innerHTML = html;
+    s.hidden = false;
+    document.body.style.overflow = "hidden";
+    var f = $("input,select", s);
+    if (f) setTimeout(function () { f.focus(); }, 50);
+  }
+  function closeSheet() { $("#sheet").hidden = true; document.body.style.overflow = ""; state.sel = null; }
+  function setErr(t) { var e = $("#err"); if (e) e.textContent = t || ""; }
+  function busy(form, on) { var b = $("button[type=submit]", form); if (b) b.disabled = on; }
+
+  function venteSheet() {
+    var p = state.sel.p, q = state.sel.q;
+    openSheet('<h3>' + esc(p.nom) + '</h3><p class="muted" style="margin:0">' + F(p.prix) + " l'unité · tu gagnes " + F(gainOf(p, 1)) + " par unité</p>" +
+      '<div class="stepper"><button type="button" data-act="qty" data-d="-1" aria-label="Moins">−</button><output aria-live="polite">' + q +
+      '</output><button type="button" data-act="qty" data-d="1" aria-label="Plus">+</button></div>' +
+      '<div class="sum"><span>Total vendu</span><strong>' + F(p.prix * q) + '</strong></div>' +
+      '<div class="sum"><span>Ton gain</span><strong>' + F(gainOf(p, q)) + "</strong></div>" +
+      '<form data-form="vente"><p class="err" id="err" role="alert"></p><button class="btn gold" type="submit">Déclarer la vente</button></form>' +
+      '<p class="note">Ton gain est ajouté à ton solde quand Corbeau confirme la vente.</p>');
+  }
+  function pinSheet() {
+    openSheet('<h3>Choisis ton mot de passe de retrait</h3><p class="muted" style="margin:0 0 4px">4 chiffres. Toi seul le connais, Corbeau ne le voit pas. Il te sera demandé à chaque retrait.</p>' +
+      '<form data-form="pin"><label class="lbl" for="p1">Mot de passe (4 chiffres)</label>' +
+      '<input class="field" id="p1" name="p1" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" required>' +
+      '<label class="lbl" for="p2">Retape-le</label>' +
+      '<input class="field" id="p2" name="p2" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" required>' +
+      '<p class="err" id="err" role="alert"></p><button class="btn" type="submit">Enregistrer</button></form>');
+  }
+  function retraitSheet() {
+    openSheet('<h3>Retirer de l\'argent</h3><p class="muted" style="margin:0">Solde : ' + F(state.me.solde) + "</p>" +
+      '<form data-form="retrait"><label class="lbl" for="r1">Montant (F)</label>' +
+      '<input class="field" id="r1" name="montant" type="number" inputmode="numeric" min="1" required>' +
+      '<label class="lbl" for="r2">Opérateur</label><select class="field" id="r2" name="op"><option>MTN</option><option>Moov</option><option>Celtiis</option></select>' +
+      '<label class="lbl" for="r3">Numéro Mobile Money</label><input class="field" id="r3" name="numero" type="tel" inputmode="tel" autocomplete="tel" required>' +
+      '<label class="lbl" for="r4">Mot de passe de retrait</label>' +
+      '<input class="field" id="r4" name="pin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" required>' +
+      '<p class="err" id="err" role="alert"></p><button class="btn" type="submit">Envoyer la demande</button></form>');
+  }
+
+  /* ---------- actions ---------- */
+  async function setTab(t) {
+    state.tab = t;
+    if (t === "ventes") { await loadVentes(); await loadProduits(); }
+    if (t === "portefeuille") await loadMouvs();
+    render();
+  }
+
+  var acts = {
+    start: async function () {
+      if (state.code) {
+        try { await enter(state.code); render(); return; } catch (e) {
+          if (/invalide/i.test(e.message || "")) { C.store(KEY, null); state.code = null; } else { toast(msg(e)); return; }
+        }
+      }
+      state.view = "code"; render();
+    },
+    home: function () { state.view = "home"; render(); },
+    tab: function (el) { setTab(el.dataset.tab); },
+    product: function (el) {
+      var p = state.produits.filter(function (x) { return x.id === el.dataset.id; })[0];
+      if (!p) return;
+      state.sel = { p: p, q: 1 }; venteSheet();
+    },
+    qty: function (el) {
+      state.sel.q = Math.max(1, Math.min(1000, state.sel.q + Number(el.dataset.d))); venteSheet();
+    },
+    retrait: function () { if (state.me.pin_defini) retraitSheet(); else pinSheet(); },
+    logout: function () {
+      if (!confirm("Te déconnecter ? Tu devras retaper ton code d'accès.")) return;
+      C.store(KEY, null); state = { code: null, me: null, produits: [], ventes: [], mouvs: [], tab: "boutique", view: "home", sel: null }; render();
+    },
+    close: closeSheet
+  };
+
+  var forms = {
+    code: async function (f) {
+      var v = f.elements.code.value.trim().toUpperCase();
+      if (!v) return;
+      busy(f, true); setErr("");
+      try { await enter(v); render(); }
+      catch (e) { setErr(/invalide/i.test(e.message || "") ? "Code invalide. Vérifie le code reçu sur WhatsApp." : msg(e)); busy(f, false); }
+    },
+    vente: async function (f) {
+      busy(f, true); setErr("");
+      var r = await sb.rpc("declarer_vente", { p_code: state.code, p_produit: state.sel.p.id, p_quantite: state.sel.q });
+      if (r.error) { setErr(msg(r.error)); busy(f, false); return; }
+      closeSheet(); toast("Vente déclarée. En attente de confirmation."); setTab("ventes");
+    },
+    pin: async function (f) {
+      var a = f.elements.p1.value, b = f.elements.p2.value;
+      if (!/^[0-9]{4}$/.test(a)) { setErr("Le mot de passe doit avoir 4 chiffres."); return; }
+      if (a !== b) { setErr("Les deux mots de passe sont différents."); return; }
+      busy(f, true); setErr("");
+      var r = await sb.rpc("definir_pin", { p_code: state.code, p_pin: a });
+      if (r.error) { setErr(msg(r.error)); busy(f, false); return; }
+      state.me.pin_defini = true; toast("Mot de passe enregistré."); retraitSheet();
+    },
+    retrait: async function (f) {
+      busy(f, true); setErr("");
+      var r = await sb.rpc("demander_retrait", {
+        p_code: state.code, p_pin: f.elements.pin.value, p_montant: parseInt(f.elements.montant.value, 10),
+        p_operateur: f.elements.op.value, p_numero: f.elements.numero.value
+      });
+      if (r.error) { setErr(msg(r.error)); busy(f, false); return; }
+      if (!r.data.ok) { setErr(r.data.erreur); busy(f, false); return; }
+      closeSheet(); toast("Demande envoyée. Corbeau te paie bientôt.");
+    }
+  };
+
+  document.addEventListener("click", function (e) {
+    if (e.target.id === "sheet") { closeSheet(); return; }
+    var el = e.target.closest("[data-act]");
+    if (el && acts[el.dataset.act]) acts[el.dataset.act](el);
+  });
+  document.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var f = e.target;
+    if (forms[f.dataset.form]) forms[f.dataset.form](f);
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#sheet").hidden) closeSheet(); });
+
+  /* ---------- démarrage ---------- */
+  (async function init() {
+    state.code = C.load(KEY);
+    if (state.code) {
+      try { await enter(state.code); }
+      catch (e) {
+        if (/invalide/i.test(e.message || "")) { C.store(KEY, null); state.code = null; } else { toast(msg(e)); }
+        state.view = "home";
+      }
+    }
+    render();
+  })();
+})();
+</script>
+</body>
+</html>
