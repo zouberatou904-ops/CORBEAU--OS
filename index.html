@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>Corbeau</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app"></div>
+<div id="sheet" class="overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true">
+    <button class="x" type="button" data-act="close" aria-label="Fermer"></button>
+    <div class="sheet-body"></div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+(function () {
+  var C = window.C, sb = C.sb, $ = C.$, esc = C.esc, F = C.F, svg = C.svg, ICON = C.ICON, toast = C.toast, fdate = C.fdate;
+  var KEY = "corbeau_code";
+  var state = { code: null, me: null, produits: [], annonces: [], defis: [], stock: [], commandes: [], versements: [], ventes: [], mouvs: [], tab: "boutique", view: "home", sel: null };
+
+  $(".x").innerHTML = svg(ICON.close, 22);
+
+  /* ---------- données ---------- */
+  function msg(e) {
+    var m = (e && e.message) || "";
+    if (/Failed to fetch|NetworkError|network/i.test(m)) return "Connexion impossible. Vérifie ton internet.";
+    return m || "Une erreur est survenue.";
+  }
+  async function loadMe() {
+    var r = await sb.rpc("connexion", { p_code: state.code });
+    if (r.error) throw r.error;
+    state.me = r.data;
+  }
+  async function get(name, args, key) {
+    var r = await sb.rpc(name, args);
+    if (!r.error) state[key] = r.data || [];
+  }
+  async function loadProduits() {
+    var r = await sb.from("produits").select("*").eq("actif", true).order("cree_le", { ascending: false });
+    if (!r.error) state.produits = r.data || [];
+  }
+  async function loadAnnonces() {
+    var r = await sb.from("annonces").select("*").eq("actif", true).order("cree_le", { ascending: false });
+    if (!r.error) {
+      state.annonces = (r.data || []).filter(function (a) { return !a.fin_le || new Date(a.fin_le) > new Date(); }).slice(0, 8);
+    }
+  }
+  async function loadHome() {
+    await Promise.all([loadProduits(), loadAnnonces(), get("mes_defis", { p_code: state.code }, "defis")]);
+  }
+  async function loadStockTab() {
+    var a = { p_code: state.code };
+    await Promise.all([
+      loadProduits(), get("mon_stock", a, "stock"), get("mes_commandes", a, "commandes"),
+      get("mes_versements", a, "versements"), get("mes_ventes", a, "ventes")
+    ]);
+  }
+  async function enter(code) {
+    state.code = code;
+    await loadMe();
+    C.store(KEY, code);
+    await loadHome();
+    state.view = "dash";
+    state.tab = "boutique";
+  }
+
+  /* ---------- écrans ---------- */
+  function homeHTML() {
+    return '<div class="wrap home">' +
+      '<img class="logo" src="logo.png" alt="Logo Corbeau : un corbeau en vol avec une pièce d\'or dans le bec">' +
+      "<h1>Vends. Gagne.<br>Chaque semaine.</h1>" +
+      '<p class="lead">Des produits réels, remis par Corbeau. Tu les vends autour de toi, on te paie.</p>' +
+      '<ul class="perks">' +
+      '<li><span class="ico">' + svg(ICON.box) + "</span>Des produits réels, livrés par Corbeau</li>" +
+      '<li><span class="ico">' + svg(ICON.coin) + "</span>30 % de commission sur chaque vente</li>" +
+      '<li><span class="ico">' + svg(ICON.cal) + "</span>Paiement chaque semaine sur ton compte</li></ul>" +
+      '<div class="grow"></div>' +
+      '<button class="btn" type="button" data-act="start">Commencer ' + svg(ICON.arrow) + "</button>" +
+      '<p class="note">Ton accès t\'a été envoyé sur WhatsApp.</p></div>';
+  }
+
+  function codeHTML() {
+    return '<div class="wrap pad">' +
+      '<button class="back" type="button" data-act="home">' + svg(ICON.back) + " Retour</button>" +
+      '<h1 style="font-size:32px;margin:16px 0 8px">Ton code d\'accès</h1>' +
+      '<p class="muted" style="margin:0 0 20px">Tu l\'as reçu sur WhatsApp. Tu le tapes une seule fois.</p>' +
+      '<form data-form="code">' +
+      '<label class="lbl" for="code">Code d\'accès</label>' +
+      '<input class="field code" id="code" name="code" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" required>' +
+      '<p class="err" id="err" role="alert"></p>' +
+      '<button class="btn" type="submit">Entrer</button></form></div>';
+  }
+
+  function headerHTML() {
+    return '<header class="top"><div class="mini"><img src="logo.png" alt="Corbeau"></div>' +
+      '<a class="pill" href="https://wa.me/' + C.cfg.WHATSAPP + '" target="_blank" rel="noopener">' + svg(ICON.chat, 18) + " Aide WhatsApp</a></header>";
+  }
+  function balanceHTML() {
+    return '<div class="bal"><div class="row1"><span>Mon solde</span><span class="coin">' + svg(ICON.coin, 18) + "</span></div>" +
+      '<div class="num">' + F(state.me.solde) + '</div><span class="tag">Payé chaque semaine</span></div>';
+  }
+  function dueHTML() {
+    var d = Number(state.me.du) || 0;
+    if (d <= 0) return "";
+    return '<div class="due"><div><div class="k">Rappel du soir</div><strong>Tu dois verser ' + F(d) + ' à Corbeau</strong></div>' +
+      '<button class="btn" type="button" data-act="verser">J\'ai versé</button></div>';
+  }
+  function gainOf(p, q) { return Math.floor((p.prix * q * p.commission_pct) / 100); }
+  function photoBlock(p) {
+    return p.photo_url && /^https?:\/\//.test(p.photo_url)
+      ? '<img class="ph" style="height:200px;margin-top:14px" src="' + esc(p.photo_url) + '" alt="' + esc(p.nom) + '">' : "";
+  }
+  function pname(id) {
+    var p = state.produits.filter(function (x) { return x.id === id; })[0];
+    return p ? p.nom : "Produit";
+  }
+
+  /* ---------- annonces défilantes ---------- */
+  ICON.pause = '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>';
+  ICON.play = '<path d="m7 4 13 8-13 8z"/>';
+  var REDUCED = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  var car = { t: null, i: 0, paused: REDUCED };
+
+  function isNew(a) { return Date.now() - new Date(a.cree_le).getTime() < 3 * 86400000; }
+  function okUrl(u) { return u && /^https?:\/\//.test(u) ? u : null; }
+  function slideHTML(a) {
+    var m = okUrl(a.media_url), fit = a.affichage === "contain" ? "contain" : "cover", media = "";
+    if (m && a.media_type === "video") {
+      media = '<video class="sm" src="' + esc(m) + '" muted playsinline preload="metadata" disablepictureinpicture style="object-fit:' + fit + '"></video>';
+    } else if (m) {
+      media = '<img class="sm" src="' + esc(m) + '" alt="" style="object-fit:' + fit + '">';
+    }
+    return '<div class="slide' + (m ? "" : " txt") + '">' + media + '<div class="shade"></div><div class="stxt">' +
+      (isNew(a) ? '<span class="new">NOUVEAU</span>' : "") + "<h3>" + esc(a.titre) + "</h3>" +
+      (a.texte ? "<p>" + esc(a.texte) + "</p>" : "") + "</div></div>";
+  }
+  function carouselHTML() {
+    if (!state.annonces.length) return "";
+    var multi = state.annonces.length > 1;
+    return '<section class="car" aria-roledescription="carousel" aria-label="Annonces Corbeau"><div class="track">' +
+      state.annonces.map(slideHTML).join("") + "</div>" +
+      (multi ? '<div class="dots" aria-hidden="true">' + state.annonces.map(function () { return "<i></i>"; }).join("") + "</div>" +
+        '<button class="cpause" type="button" data-act="carpause" aria-label="' + (car.paused ? "Lancer le défilement" : "Mettre en pause") + '">' +
+        svg(car.paused ? ICON.play : ICON.pause, 20) + "</button>" : "") + "</section>";
+  }
+  function carEls() {
+    var t = document.querySelector(".track");
+    return t ? { t: t, s: [].slice.call(t.children), d: [].slice.call(document.querySelectorAll(".dots i")) } : null;
+  }
+  function carSchedule() {
+    clearTimeout(car.t);
+    var e = carEls();
+    if (!e || e.s.length < 2 || car.paused || document.hidden) return;
+    var v = e.s[car.i].querySelector("video"), wait = 5500;
+    if (v) { v.loop = false; v.onended = function () { carGo(car.i + 1); }; wait = 15000; }
+    car.t = setTimeout(function () { carGo(car.i + 1); }, wait);
+  }
+  function carMark() {
+    var e = carEls();
+    if (!e) return;
+    e.s.forEach(function (s, k) {
+      var on = k === car.i, v = s.querySelector("video");
+      s.classList.toggle("on", on);
+      if (v) {
+        if (on && !car.paused && !document.hidden) {
+          v.loop = e.s.length < 2;
+          var p = v.play();
+          if (p && p.catch) p.catch(function () {});
+        } else { v.pause(); }
+      }
+    });
+    e.d.forEach(function (d, k) { d.classList.toggle("on", k === car.i); });
+    carSchedule();
+  }
+  function carGo(i) {
+    var e = carEls();
+    if (!e) return;
+    var n = e.s.length;
+    car.i = ((i % n) + n) % n;
+    e.t.scrollTo({ left: car.i * e.t.clientWidth, behavior: "smooth" });
+    carMark();
+  }
+  function initCarousel() {
+    clearTimeout(car.t);
+    var e = carEls();
+    if (!e) return;
+    car.i = 0;
+    var timer;
+    e.t.addEventListener("touchstart", function () { clearTimeout(car.t); }, { passive: true });
+    e.t.addEventListener("scroll", function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        var k = Math.round(e.t.scrollLeft / e.t.clientWidth);
+        if (k !== car.i && k >= 0 && k < e.s.length) { car.i = k; carMark(); }
+      }, 120);
+    }, { passive: true });
+    carMark();
+  }
+
+  function defisHTML() {
+    return state.defis.map(function (d) {
+      var pct = Math.min(100, Math.round((d.progression * 100) / d.objectif));
+      var last = new Date(new Date(d.fin).getTime() - 86400000);
+      return '<div class="defi"><div class="drow"><span class="k">DÉFI</span><span class="bonus">+ ' + F(d.bonus) + "</span></div>" +
+        "<strong>" + esc(d.titre) + "</strong>" +
+        '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + d.objectif + '" aria-valuenow="' + d.progression + '"><span style="width:' + pct + '%"></span></div>' +
+        '<div class="drow"><span>' + d.progression + " / " + d.objectif + " articles</span><span>" +
+        (d.gagne ? "Bonus gagné !" : "Plus que " + Math.max(0, d.objectif - d.progression)) + "</span></div>" +
+        (d.a_verser > 0 && !d.gagne ? '<div class="dsub">' + d.a_verser + " article(s) vendus à verser pour qu'ils comptent.</div>" : "") +
+        '<div class="dsub">Jusqu\'au ' + fdate(last) + "</div></div>";
+    }).join("");
+  }
+
+  function boutiqueHTML() {
+    var cards = state.produits.map(function (p) {
+      var photo = p.photo_url && /^https?:\/\//.test(p.photo_url)
+        ? '<img class="ph" src="' + esc(p.photo_url) + '" alt="' + esc(p.nom) + '" loading="lazy">'
+        : '<div class="ph">PHOTO À VENIR</div>';
+      return '<button class="pcard" type="button" data-act="product" data-id="' + esc(p.id) + '">' + photo +
+        '<div class="pn">' + esc(p.nom) + '</div><div class="pf"><span>' + F(p.prix) +
+        '</span><span class="badge ok">+ ' + F(gainOf(p, 1)) + "</span></div></button>";
+    }).join("");
+    return headerHTML() + carouselHTML() + balanceHTML() + dueHTML() + defisHTML() + '<h2 class="t">Commander des produits</h2>' +
+      (cards ? '<div class="grid">' + cards + "</div>" : '<p class="empty">Aucun produit pour le moment.</p>');
+  }
+
+  function stockHTML() {
+    var stock = state.stock.map(function (s) {
+      return '<li class="item"><div><strong>' + esc(s.nom) + '</strong><div class="muted sub">' + s.stock + ' en stock</div></div>' +
+        '<button class="btn small" type="button" data-act="declarer" data-id="' + esc(s.produit_id) + '">J\'ai vendu</button></li>';
+    }).join("");
+
+    var cl = { demandee: ["En attente de livraison", ""], livree: ["Livrée", "ok"], annulee: ["Annulée", "no"] };
+    var cmds = state.commandes.map(function (c) {
+      var l = cl[c.statut] || ["", ""];
+      return '<li class="item"><div><strong>' + esc(pname(c.produit_id)) + "</strong> × " + c.quantite +
+        '<div class="muted sub">' + fdate(c.cree_le) + '</div></div><span class="badge ' + l[1] + '">' + l[0] + "</span></li>";
+    }).join("");
+
+    var vs = state.ventes.map(function (v) {
+      var l;
+      if (v.statut === "rejetee") l = ["Rejetée", "no"];
+      else if (v.statut === "confirmee") l = ["Confirmée", "ok"];
+      else if (v.verse >= v.montant) l = ["Versée", "ok"];
+      else if (v.verse > 0) l = ["Versée en partie", ""];
+      else l = ["À verser", ""];
+      return '<li class="item"><div><strong>' + esc(pname(v.produit_id)) + "</strong> × " + v.quantite +
+        '<div class="muted sub">' + fdate(v.cree_le) + " · " + F(v.montant) + '</div></div><div class="r"><span>+ ' + F(v.gain) +
+        '</span><span class="badge ' + l[1] + '">' + l[0] + "</span></div></li>";
+    }).join("");
+
+    var vl = { annonce: ["En attente de Corbeau", ""], recu: ["Reçu", "ok"], refuse: ["Refusé", "no"] };
+    var vers = state.versements.map(function (v) {
+      var l = vl[v.statut] || ["", ""];
+      return '<li class="item"><div><strong>' + F(v.montant) + '</strong><div class="muted sub">' + fdate(v.cree_le) +
+        (v.operateur ? " · " + esc(v.operateur) : "") + '</div></div><span class="badge ' + l[1] + '">' + l[0] + "</span></li>";
+    }).join("");
+
+    return '<h2 class="t" style="margin-top:0">Mon stock</h2>' + dueHTML() +
+      (stock ? '<ul class="list">' + stock + "</ul>" : '<p class="empty">Aucun produit en stock.<br>Commande dans la Boutique, Corbeau te livre.</p>') +
+      '<h2 class="t">Mes commandes</h2>' + (cmds ? '<ul class="list">' + cmds + "</ul>" : '<p class="empty">Aucune commande.</p>') +
+      '<h2 class="t">Mes ventes</h2>' + (vs ? '<ul class="list">' + vs + "</ul>" : '<p class="empty">Aucune vente déclarée.</p>') +
+      (vers ? '<h2 class="t">Mes versements</h2><ul class="list">' + vers + "</ul>" : "");
+  }
+
+  function portefeuilleHTML() {
+    var lab = { vente: "Gain sur vente versée", bonus: "Bonus", paiement: "Paiement reçu", retrait: "Retrait", ajustement: "Ajustement" };
+    var rows = state.mouvs.map(function (m) {
+      var neg = m.montant < 0;
+      return '<li class="item"><div><strong>' + (lab[m.type] || "Mouvement") + '</strong><div class="muted sub">' +
+        fdate(m.cree_le) + (m.note && m.type !== "vente" ? " · " + esc(m.note) : "") + '</div></div><div class="r"><span>' +
+        (neg ? "− " : "+ ") + F(Math.abs(m.montant)) + "</span></div></li>";
+    }).join("");
+    return '<h2 class="t" style="margin-top:0">Portefeuille</h2>' + balanceHTML() +
+      '<div style="margin:16px 0"><button class="btn gold" type="button" data-act="retrait">Retirer de l\'argent</button></div>' +
+      '<h2 class="t">Historique</h2>' +
+      (rows ? '<ul class="list">' + rows + "</ul>" : '<p class="empty">Aucun mouvement pour le moment.</p>');
+  }
+
+  function compteHTML() {
+    return '<h2 class="t" style="margin-top:0">Mon compte</h2>' +
+      '<div class="card"><div class="muted sub">Nom</div><strong style="font-size:18px">' + esc(state.me.nom) + "</strong></div>" +
+      '<p class="muted">Ton accès est enregistré sur ce téléphone. Tu n\'as pas besoin de retaper ton code.</p>' +
+      '<a class="btn soft" href="https://wa.me/' + C.cfg.WHATSAPP + '" target="_blank" rel="noopener">' + svg(ICON.chat) + " Écrire à Corbeau</a>" +
+      '<div style="height:12px"></div><button class="btn soft" type="button" data-act="logout">Se déconnecter</button>';
+  }
+
+  var TABS = [["boutique", "Boutique", "shop"], ["stock", "Mon stock", "box"], ["portefeuille", "Portefeuille", "wallet"], ["compte", "Compte", "user"]];
+  function dashHTML() {
+    var body = { boutique: boutiqueHTML, stock: stockHTML, portefeuille: portefeuilleHTML, compte: compteHTML }[state.tab]();
+    var nav = TABS.map(function (t) {
+      var on = state.tab === t[0];
+      return '<button class="tab' + (on ? " on" : "") + '" type="button" data-act="tab" data-tab="' + t[0] + '"' + (on ? ' aria-current="page"' : "") + ">" + svg(ICON[t[2]], 24) + "<span>" + t[1] + "</span></button>";
+    }).join("");
+    return '<div class="wrap"><main class="pad">' + body + '</main><nav class="tabs" aria-label="Navigation principale">' + nav + "</nav></div>";
+  }
+
+  function render() {
+    var h = state.view === "home" ? homeHTML() : state.view === "code" ? codeHTML() : dashHTML();
+    $("#app").innerHTML = h;
+    window.scrollTo(0, 0);
+    initCarousel();
+  }
+
+  /* ---------- fenêtre du bas ---------- */
+  function openSheet(html) {
+    var s = $("#sheet");
+    $(".sheet-body", s).innerHTML = html;
+    s.hidden = false;
+    document.body.style.overflow = "hidden";
+    var f = $("input,select", s);
+    if (f) setTimeout(function () { f.focus(); }, 50);
+  }
+  function closeSheet() { $("#sheet").hidden = true; document.body.style.overflow = ""; state.sel = null; }
+  function setErr(t) { var e = $("#err"); if (e) e.textContent = t || ""; }
+  function busy(form, on) { var b = $("button[type=submit]", form); if (b) b.disabled = on; }
+
+  function qtyBlock(q, withChips) {
+    return (withChips ? '<div class="chips"><button class="chip" type="button" data-act="setqty" data-q="6">6</button><button class="chip" type="button" data-act="setqty" data-q="12">12</button><button class="chip" type="button" data-act="setqty" data-q="24">24</button></div>' : "") +
+      '<div class="stepper"><button type="button" data-act="qty" data-d="-1" aria-label="Moins">−</button><output aria-live="polite">' + q +
+      '</output><button type="button" data-act="qty" data-d="1" aria-label="Plus">+</button></div>';
+  }
+  function sheetQty() { return state.sel.mode === "declarer" ? declarerSheet() : commanderSheet(); }
+
+  function commanderSheet() {
+    var p = state.sel.p, q = state.sel.q;
+    openSheet('<h3>' + esc(p.nom) + '</h3><p class="muted" style="margin:0">' + F(p.prix) + " l'unité · tu gagnes " + F(gainOf(p, 1)) + " par unité vendue</p>" +
+      photoBlock(p) + qtyBlock(q, true) +
+      '<div class="sum"><span>Valeur de la commande</span><strong>' + F(p.prix * q) + '</strong></div>' +
+      '<div class="sum"><span>Ton gain si tout est vendu</span><strong>' + F(gainOf(p, q)) + "</strong></div>" +
+      '<form data-form="commande"><p class="err" id="err" role="alert"></p><button class="btn gold" type="submit">Commander</button></form>' +
+      '<p class="note">Corbeau te livre ta commande. Ensuite tu déclares tes ventes chaque soir.</p>');
+  }
+  function declarerSheet() {
+    var p = state.sel.p, q = state.sel.q;
+    openSheet('<h3>' + esc(p.nom) + '</h3><p class="muted" style="margin:0">' + state.sel.max + " en stock</p>" + qtyBlock(q, false) +
+      '<div class="sum"><span>À verser à Corbeau</span><strong>' + F(p.prix * q) + '</strong></div>' +
+      '<div class="sum"><span>Ton gain (payé chaque semaine)</span><strong>' + F(gainOf(p, q)) + "</strong></div>" +
+      '<form data-form="vente"><p class="err" id="err" role="alert"></p><button class="btn gold" type="submit">Déclarer la vente</button></form>' +
+      '<p class="note">Tu verses la totalité de l\'argent vendu à Corbeau. Ton gain est payé chaque semaine.</p>');
+  }
+  function verserSheet() {
+    var d = Number(state.me.du) || 0;
+    openSheet('<h3>Verser l\'argent</h3><p class="muted" style="margin:0">À verser : ' + F(d) + "</p>" +
+      '<form data-form="verser"><label class="lbl" for="v1">Montant versé (F)</label>' +
+      '<input class="field" id="v1" name="montant" type="number" inputmode="numeric" min="1" max="' + d + '" value="' + d + '" required>' +
+      '<label class="lbl" for="v2">Opérateur</label><select class="field" id="v2" name="op"><option>MTN</option><option>Moov</option><option>Celtiis</option></select>' +
+      '<label class="lbl" for="v3">Référence de la transaction (facultatif)</label><input class="field" id="v3" name="ref" autocomplete="off">' +
+      '<p class="err" id="err" role="alert"></p><button class="btn gold" type="submit">J\'ai versé</button></form>' +
+      '<p class="note">Envoie d\'abord l\'argent à Corbeau par Mobile Money, puis valide ici. Corbeau confirme à la réception.</p>');
+  }
+  function pinSheet() {
+    openSheet('<h3>Choisis ton mot de passe de retrait</h3><p class="muted" style="margin:0 0 4px">4 chiffres. Toi seul le connais, Corbeau ne le voit pas. Il te sera demandé à chaque retrait.</p>' +
+      '<form data-form="pin"><label class="lbl" for="p1">Mot de passe (4 chiffres)</label>' +
+      '<input class="field" id="p1" name="p1" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" required>' +
+      '<label class="lbl" for="p2">Retape-le</label>' +
+      '<input class="field" id="p2" name="p2" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" required>' +
+      '<p class="err" id="err" role="alert"></p><button class="btn" type="submit">Enregistrer</button></form>');
+  }
+  function retraitSheet() {
+    openSheet('<h3>Retirer de l\'argent</h3><p class="muted" style="margin:0">Solde : ' + F(state.me.solde) + "</p>" +
+      '<form data-form="retrait"><label class="lbl" for="r1">Montant (F)</label>' +
+      '<input class="field" id="r1" name="montant" type="number" inputmode="numeric" min="1" required>' +
+      '<label class="lbl" for="r2">Opérateur</label><select class="field" id="r2" name="op"><option>MTN</option><option>Moov</option><option>Celtiis</option></select>' +
+      '<label class="lbl" for="r3">Numéro Mobile Money</label><input class="field" id="r3" name="numero" type="tel" inputmode="tel" autocomplete="tel" required>' +
+      '<label class="lbl" for="r4">Mot de passe de retrait</label>' +
+      '<input class="field" id="r4" name="pin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="off" required>' +
+      '<p class="err" id="err" role="alert"></p><button class="btn" type="submit">Envoyer la demande</button></form>');
+  }
+
+  /* ---------- actions ---------- */
+  async function setTab(t) {
+    state.tab = t;
+    try { await loadMe(); } catch (e) {}
+    if (t === "boutique") await loadHome();
+    if (t === "stock") await loadStockTab();
+    if (t === "portefeuille") await get("mes_mouvements", { p_code: state.code }, "mouvs");
+    render();
+  }
+
+  var acts = {
+    start: async function () {
+      if (state.code) {
+        try { await enter(state.code); render(); return; } catch (e) {
+          if (/invalide/i.test(e.message || "")) { C.store(KEY, null); state.code = null; } else { toast(msg(e)); return; }
+        }
+      }
+      state.view = "code"; render();
+    },
+    home: function () { state.view = "home"; render(); },
+    tab: function (el) { setTab(el.dataset.tab); },
+    product: function (el) {
+      var p = state.produits.filter(function (x) { return x.id === el.dataset.id; })[0];
+      if (!p) return;
+      state.sel = { mode: "commande", p: p, q: 1, max: 1000 }; commanderSheet();
+    },
+    declarer: function (el) {
+      var s = state.stock.filter(function (x) { return x.produit_id === el.dataset.id; })[0];
+      var p = state.produits.filter(function (x) { return x.id === el.dataset.id; })[0];
+      if (!s || !p) { toast("Ce produit n'est plus disponible."); return; }
+      state.sel = { mode: "declarer", p: p, q: 1, max: s.stock }; declarerSheet();
+    },
+    verser: function () { verserSheet(); },
+    carpause: function (el) {
+      car.paused = !car.paused;
+      el.setAttribute("aria-label", car.paused ? "Lancer le défilement" : "Mettre en pause");
+      el.innerHTML = svg(car.paused ? ICON.play : ICON.pause, 20);
+      carMark();
+    },
+    qty: function (el) {
+      state.sel.q = Math.max(1, Math.min(state.sel.max, state.sel.q + Number(el.dataset.d))); sheetQty();
+    },
+    setqty: function (el) {
+      state.sel.q = Math.max(1, Math.min(state.sel.max, Number(el.dataset.q))); sheetQty();
+    },
+    retrait: function () { if (state.me.pin_defini) retraitSheet(); else pinSheet(); },
+    logout: function () {
+      if (!confirm("Te déconnecter ? Tu devras retaper ton code d'accès.")) return;
+      C.store(KEY, null);
+      state = { code: null, me: null, produits: [], annonces: [], defis: [], stock: [], commandes: [], versements: [], ventes: [], mouvs: [], tab: "boutique", view: "home", sel: null };
+      render();
+    },
+    close: closeSheet
+  };
+
+  var forms = {
+    code: async function (f) {
+      var v = f.elements.code.value.trim().toUpperCase();
+      if (!v) return;
+      busy(f, true); setErr("");
+      try { await enter(v); render(); }
+      catch (e) { setErr(/invalide/i.test(e.message || "") ? "Code invalide. Vérifie le code reçu sur WhatsApp." : msg(e)); busy(f, false); }
+    },
+    commande: async function (f) {
+      busy(f, true); setErr("");
+      var r = await sb.rpc("commander", { p_code: state.code, p_produit: state.sel.p.id, p_quantite: state.sel.q });
+      if (r.error) { setErr(msg(r.error)); busy(f, false); return; }
+      closeSheet(); toast("Commande envoyée. Corbeau te livre bientôt."); setTab("stock");
+    },
+    vente: async function (f) {
+      busy(f, true); setErr("");
+      var r = await sb.rpc("declarer_vente", { p_code: state.code, p_produit: state.sel.p.id, p_quantite: state.sel.q });
+      if (r.error) { setErr(msg(r.error)); busy(f, false); return; }
+      closeSheet(); toast("Vente déclarée. Pense à verser l'argent."); setTab("stock");
+    },
+    verser: async function (f) {
+      busy(f, true); setErr("");
+      var r = await sb.rpc("annoncer_versement", {
+        p_code: state.code, p_montant: parseInt(f.elements.montant.value, 10), p_operateur: f.elements.op.value, p_reference: f.elements.ref.value
+      });
+      if (r.error) { setErr(msg(r.error)); busy(f, false); return; }
+      closeSheet(); toast("Versement annoncé. Corbeau va le confirmer."); setTab("stock");
+    },
+    pin: async function (f) {
+      var a = f.elements.p1.value, b = f.elements.p2.value;
+      if (!/^[0-9]{4}$/.test(a)) { setErr("Le mot de passe doit avoir 4 chiffres."); return; }
+      if (a !== b) { setErr("Les deux mots de passe sont différents."); return; }
+      busy(f, true); setErr("");
+      var r = await sb.rpc("definir_pin", { p_code: state.code, p_pin: a });
+      if (r.error) { setErr(msg(r.error)); busy(f, false); return; }
+      state.me.pin_defini = true; toast("Mot de passe enregistré."); retraitSheet();
+    },
+    retrait: async function (f) {
+      busy(f, true); setErr("");
+      var r = await sb.rpc("demander_retrait", {
+        p_code: state.code, p_pin: f.elements.pin.value, p_montant: parseInt(f.elements.montant.value, 10),
+        p_operateur: f.elements.op.value, p_numero: f.elements.numero.value
+      });
+      if (r.error) { setErr(msg(r.error)); busy(f, false); return; }
+      if (!r.data.ok) { setErr(r.data.erreur); busy(f, false); return; }
+      closeSheet(); toast("Demande envoyée. Corbeau te paie bientôt.");
+    }
+  };
+
+  document.addEventListener("click", function (e) {
+    if (e.target.id === "sheet") { closeSheet(); return; }
+    var el = e.target.closest("[data-act]");
+    if (el && acts[el.dataset.act]) acts[el.dataset.act](el);
+  });
+  document.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var f = e.target;
+    if (forms[f.dataset.form]) forms[f.dataset.form](f);
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#sheet").hidden) closeSheet(); });
+
+  document.addEventListener("visibilitychange", function () { carMark(); });
+
+  /* ---------- démarrage ---------- */
+  (async function init() {
+    state.code = C.load(KEY);
+    if (state.code) {
+      try { await enter(state.code); }
+      catch (e) {
+        if (/invalide/i.test(e.message || "")) { C.store(KEY, null); state.code = null; } else { toast(msg(e)); }
+        state.view = "home";
+      }
+    }
+    render();
+  })();
+})();
+</script>
+</body>
+</html>
