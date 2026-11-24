@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<title>Corbeau – Boss</title>
+<link rel="icon" href="logo.png">
+<link rel="manifest" href="admin.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Boss">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app"></div>
+<div id="sheet" class="overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true">
+    <button class="x" type="button" data-act="close" aria-label="Fermer"></button>
+    <div class="sheet-body"></div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="pick" accept="image/*" hidden>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });</script>
+<script>
+(function () {
+  var C = window.C, sb = C.sb, $ = C.$, esc = C.esc, F = C.F, svg = C.svg, ICON = C.ICON, toast = C.toast, fdate = C.fdate;
+  var state = { view: "login", tab: "commandes", commandes: [], versements: [], retraits: [], membres: [], produits: [], annonces: [], defis: [], paies: [], fiches: {}, reglages: { plafond_nouveau: 20000, plafond_certifie: 100000, delai_heures: 48, certif_min_ventes: 5, fiche_obligatoire: true, travail_min_articles: 10 } };
+
+  $(".x").innerHTML = svg(ICON.close, 22);
+
+  function msg(e) {
+    var m = (e && e.message) || "";
+    if (/Failed to fetch|NetworkError|network/i.test(m)) return "Connexion impossible. Vérifie ton internet.";
+    if (/bucket not found/i.test(m)) return "Stockage non activé. Lance d'abord le fichier SQL (photos.sql ou annonces.sql) dans Supabase.";
+    if (/relation .* does not exist|schema cache/i.test(m)) return "Les annonces ne sont pas encore activées. Lance d'abord annonces.sql dans Supabase.";
+    if (/mime|too large|payload/i.test(m)) return "Photo refusée (trop lourde ou mauvais format).";
+    return m || "Une erreur est survenue.";
+  }
+  function setErr(t) { var e = $("#err"); if (e) e.textContent = t || ""; }
+  function busy(form, on) { var b = $("button[type=submit]", form); if (b) b.disabled = on; }
+  function intl(num) {
+    var d = String(num || "").replace(/\D/g, "");
+    if (!d) return "";
+    return d.indexOf("229") === 0 && d.length > 10 ? d : "229" + d;
+  }
+
+  /* ---------- chargement ---------- */
+  async function loadAll() {
+    var a = await Promise.all([
+      sb.from("commandes").select("id,quantite,cree_le,liv_tel,liv_quartier,liv_repere,liv_lat,liv_lng,membres(nom),produits(nom)").eq("statut", "demandee").order("cree_le"),
+      sb.from("versements").select("id,montant,operateur,reference,cree_le,membres(nom)").eq("statut", "annonce").order("cree_le"),
+      sb.from("retraits").select("id,montant,operateur,numero,cree_le,membres(nom)").eq("statut", "en_attente").order("cree_le"),
+      sb.from("membres_soldes").select("*").order("cree_le", { ascending: false }),
+      sb.from("produits").select("*").order("cree_le", { ascending: false }),
+      sb.from("annonces").select("*").order("cree_le", { ascending: false }),
+      sb.from("defis").select("*, defi_gains(count)").order("cree_le", { ascending: false }),
+      sb.from("reglages").select("*").eq("id", 1),
+      sb.from("mouvements").select("id,montant,cree_le,membres(nom)").eq("type", "paiement").order("cree_le", { ascending: false }).limit(300),
+      sb.from("retraits").select("id,montant,traite_le,cree_le,membres(nom)").eq("statut", "paye").order("traite_le", { ascending: false }).limit(300),
+      sb.from("verifications").select("*"),
+      sb.from("membres_travail").select("*")
+    ]);
+    state.commandes = a[0].data || [];
+    state.versements = a[1].data || [];
+    state.retraits = a[2].data || [];
+    var tr = {};
+    (a[11].data || []).forEach(function (t) { tr[t.id] = t; });
+    state.membres = (a[3].data || []).map(function (m) {
+      var t = tr[m.id] || {};
+      m.articles_verses = t.articles_verses || 0; m.a_travaille = !!t.a_travaille; m.bswold_ok = !!t.bswold_ok;
+      return m;
+    });
+    state.produits = a[4].data || [];
+    state.annonces = a[5].data || [];
+    state.defis = a[6].data || [];
+    if (a[7].data && a[7].data[0]) state.reglages = a[7].data[0];
+    state.fiches = {};
+    (a[10].data || []).forEach(function (f) { state.fiches[f.membre_id] = f; });
+    state.paies = (a[8].data || []).map(function (x) { return { d: x.cree_le, nom: (x.membres || {}).nom, m: Math.abs(x.montant), t: "Paie de la semaine" }; })
+      .concat((a[9].data || []).map(function (x) { return { d: x.traite_le || x.cree_le, nom: (x.membres || {}).nom, m: x.montant, t: "Retrait payé" }; }))
+      .sort(function (x, y) { return new Date(y.d) - new Date(x.d); });
+  }
+
+  /* ---------- écrans ---------- */
+  function loginHTML(refus) {
+    return '<div class="wrap pad"><div class="mini" style="width:96px;height:66px"><img src="logo.png" alt="Corbeau" style="width:96px;height:96px"></div>' +
+      '<h1 style="font-size:30px;margin:20px 0 8px">Bureau du boss</h1>' +
+      (refus ? '<p class="err">Ce compte n\'a pas accès au bureau.</p><button class="btn soft" type="button" data-act="logout">Se déconnecter</button>'
+        : '<form data-form="login"><label class="lbl" for="em">Email</label><input class="field" id="em" name="email" type="email" autocomplete="username" required>' +
+          '<label class="lbl" for="pw">Mot de passe</label><input class="field" id="pw" name="pw" type="password" autocomplete="current-password" required>' +
+          '<p class="err" id="err" role="alert"></p><button class="btn" type="submit">Entrer</button></form>') + "</div>";
+  }
+
+  function commandesHTML() {
+    var rows = state.commandes.map(function (c) {
+      var num = intl(c.liv_tel), nom = (c.membres || {}).nom || "";
+      var liv = c.liv_quartier
+        ? '<div class="sub" style="margin-top:8px"><strong>Livrer à :</strong> ' + esc(c.liv_quartier) + " — " + esc(c.liv_repere) + "</div>" +
+          '<div class="acts" style="margin-top:8px">' +
+          (c.liv_lat != null && c.liv_lng != null
+            ? '<a class="btn small soft" target="_blank" rel="noopener" href="https://www.google.com/maps?q=' + encodeURIComponent(c.liv_lat + "," + c.liv_lng) + '">Voir sur la carte</a>' : "") +
+          (num ? '<a class="btn small soft" href="tel:+' + esc(num) + '">Appeler</a>' +
+            '<a class="btn small soft" target="_blank" rel="noopener" href="https://wa.me/' + esc(num) + "?text=" +
+            encodeURIComponent("Bonjour " + nom + ", c'est Corbeau pour la livraison de ta commande. Es-tu disponible ?") + '">WhatsApp</a>' : "") +
+          "</div>"
+        : '<div class="muted sub" style="margin-top:8px">Pas d\'adresse (ancienne commande)</div>';
+      return '<div class="card"><strong>' + esc(nom) + "</strong> commande " + c.quantite + " × " + esc((c.produits || {}).nom) +
+        '<div class="muted sub">' + fdate(c.cree_le) + "</div>" + liv +
+        '<div class="acts"><button class="btn small" type="button" data-act="cmd-ok" data-id="' + esc(c.id) + '">Livré</button>' +
+        '<button class="btn small soft" type="button" data-act="cmd-no" data-id="' + esc(c.id) + '">Annuler</button></div></div>';
+    }).join("");
+    return '<h2 class="t" style="margin-top:0">Commandes à livrer</h2>' +
+      '<p class="muted" style="margin-top:0">Quand tu as remis les produits, appuie sur « Livré ». Ils entrent alors dans le stock de la personne.</p>' +
+      (rows || '<p class="empty">Aucune commande en attente.</p>');
+  }
+
+  function argentHTML() {
+    var vers = state.versements.map(function (v) {
+      return '<div class="card"><strong>' + esc((v.membres || {}).nom) + "</strong> annonce avoir versé " + F(v.montant) +
+        '<div class="muted sub">' + esc(v.operateur || "") + (v.reference ? " · réf " + esc(v.reference) : "") + " · " + fdate(v.cree_le) + "</div>" +
+        '<div class="acts"><button class="btn small" type="button" data-act="ver-ok" data-id="' + esc(v.id) + '">Reçu</button>' +
+        '<button class="btn small soft" type="button" data-act="ver-no" data-id="' + esc(v.id) + '">Pas reçu</button></div></div>';
+    }).join("");
+    var rets = state.retraits.map(function (r) {
+      return '<div class="card"><strong>' + esc((r.membres || {}).nom) + "</strong> demande " + F(r.montant) +
+        '<div class="muted sub">' + esc(r.operateur) + " · " + esc(r.numero) + " · " + fdate(r.cree_le) + "</div>" +
+        '<div class="acts"><button class="btn small" type="button" data-act="ret-ok" data-id="' + esc(r.id) + '">J\'ai payé</button>' +
+        '<button class="btn small soft" type="button" data-act="ret-no" data-id="' + esc(r.id) + '">Refuser</button></div></div>';
+    }).join("");
+    return '<h2 class="t" style="margin-top:0">À encaisser</h2>' +
+      '<p class="muted" style="margin-top:0">Argent que les vendeurs disent avoir versé. Vérifie ton Mobile Money, puis appuie sur « Reçu ».</p>' +
+      (vers || '<p class="empty">Aucun versement annoncé.</p>') +
+      '<h2 class="t">À payer (retraits demandés)</h2>' +
+      '<p class="muted" style="margin-top:0">Envoie l\'argent par Mobile Money, puis appuie sur « J\'ai payé ».</p>' +
+      (rets || '<p class="empty">Aucun retrait en attente.</p>') + paiesHTML();
+  }
+  function mondayOf(iso) { var d = new Date(iso), k = (d.getDay() + 6) % 7; return new Date(d.getFullYear(), d.getMonth(), d.getDate() - k); }
+  function paiesHTML() {
+    var weeks = [], idx = {};
+    state.paies.forEach(function (p) {
+      var mo = mondayOf(p.d), key = ymd(mo);
+      if (!idx[key]) { idx[key] = { mo: mo, tot: 0, rows: [] }; weeks.push(idx[key]); }
+      idx[key].tot += p.m; idx[key].rows.push(p);
+    });
+    var body = weeks.map(function (w) {
+      return '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><strong>Semaine du ' + fdate(w.mo) + "</strong><strong>" + F(w.tot) + "</strong></div>" +
+        w.rows.map(function (p) {
+          return '<div class="sum" style="border-top:1px solid var(--line);margin-top:8px"><span>' + esc(p.nom || "") + '<div class="muted sub">' + esc(p.t) + " · " + fdate(p.d) + "</div></span><strong>" + F(p.m) + "</strong></div>";
+        }).join("") + "</div>";
+    }).join("");
+    return '<h2 class="t">Historique de tes paies</h2><p class="muted" style="margin-top:0">Tout ce que tu as payé aux vendeurs, semaine par semaine.</p>' +
+      (body || '<p class="empty">Aucune paie enregistrée pour le moment.</p>');
+  }
+
+  function afaireHTML() {
+    var late = state.membres.filter(function (m) { return m.retard > 0; });
+    var fiches = state.membres.filter(function (m) { return m.fiche === "soumise"; });
+    var prop = state.membres.filter(function (m) { return m.propose; });
+    var lines = [];
+    var bsw = state.membres.filter(function (m) { return m.a_travaille && !m.bswold_ok; });
+    if (bsw.length) lines.push("<li><strong>" + bsw.length + " à activer dans BS WOLD</strong> (ont vraiment travaillé) : " + bsw.map(function (m) { return esc(m.nom) + " " + esc(m.whatsapp || ""); }).join(", ") + "</li>");
+    if (late.length) lines.push("<li><strong>" + late.length + " en retard</strong> : " + late.map(function (m) { return esc(m.nom) + " (" + F(m.retard) + ")"; }).join(", ") + "</li>");
+    if (fiches.length) lines.push("<li><strong>" + fiches.length + " fiche(s) à vérifier</strong> : " + fiches.map(function (m) { return esc(m.nom); }).join(", ") + "</li>");
+    if (prop.length) lines.push("<li><strong>" + prop.length + " à certifier</strong> (ils versent à temps) : " + prop.map(function (m) { return esc(m.nom); }).join(", ") + "</li>");
+    if (!lines.length) return "";
+    return '<div class="card" style="background:#FBF3D9"><strong>À faire</strong><ul style="margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px">' + lines.join("") + "</ul></div>";
+  }
+  function membresHTML() {
+    var total = state.membres.reduce(function (s, m) { return s + Math.max(0, m.solde); }, 0);
+    var sorted = state.membres.slice().sort(function (a, b) { return (b.retard > 0) - (a.retard > 0); });
+    var rows = sorted.map(function (m) {
+      var num = intl(m.whatsapp), dh = state.reglages.delai_heures;
+      var rappel = m.du > 0 && num
+        ? '<a class="btn small soft" target="_blank" rel="noopener" href="https://wa.me/' + num + "?text=" +
+          encodeURIComponent(m.retard > 0
+            ? "Bonjour " + m.nom + ", Corbeau : tu as " + F(m.retard) + " à verser depuis plus de " + dh + " h. Verse-les s'il te plaît pour pouvoir commander à nouveau."
+            : "Bonjour " + m.nom + ", rappel Corbeau : tu dois verser " + F(m.du) + " ce soir. Merci !") + '">Rappeler</a>'
+        : "";
+      var pointer = m.stock > 0 && !m.pointe && num
+        ? '<a class="btn small soft" target="_blank" rel="noopener" href="https://wa.me/' + num + "?text=" +
+          encodeURIComponent("Bonjour " + m.nom + ", n'oublie pas ton pointage du soir sur Corbeau : as-tu vendu aujourd'hui ?") + '">Rappel pointage</a>'
+        : "";
+      var badges = (m.a_travaille ? '<span class="badge ok">A travaillé</span> ' : "") + (m.retard > 0 ? '<span class="badge late">EN RETARD</span> ' : "") +
+        (m.propose ? '<span class="badge warn">À certifier ?</span> ' : "") +
+        (m.fiche === "soumise" ? '<span class="badge warn">Fiche à vérifier</span> ' : m.fiche === "a_remplir" ? '<span class="badge">Sans fiche</span> ' : m.fiche === "refusee" ? '<span class="badge no">Fiche refusée</span> ' : "") +
+        '<span class="badge' + (m.certifie ? " ok" : "") + '">' + (m.certifie ? "Certifié" : "Nouveau") + '</span> <span class="badge ' + (m.actif ? "ok" : "no") + '">' + (m.actif ? "Actif" : "Bloqué") + "</span>";
+      var plaf = m.certifie ? state.reglages.plafond_certifie : state.reglages.plafond_nouveau;
+      return '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><strong>' + esc(m.nom) + '</strong><span style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">' + badges + "</span></div>" +
+        '<div class="muted sub">' + esc(m.whatsapp || "sans numéro") + "</div>" +
+        '<div class="sum"><span>À lui payer (solde)</span><strong>' + F(m.solde) + "</strong></div>" +
+        '<div class="sum" style="border-top:0"><span>Doit te verser</span><strong>' + F(m.du) + "</strong></div>" +
+        '<div class="sum" style="border-top:0"><span>Articles vendus et versés</span><strong>' + m.articles_verses + " / " + state.reglages.travail_min_articles + "</strong></div>" +
+        '<div class="sum" style="border-top:0"><span>Stock chez lui</span><strong>' + m.stock + "</strong></div>" +
+        '<div class="sum" style="border-top:0"><span>Marchandise en cours</span><strong>' + F(m.expo) + " / " + F(plaf) + "</strong></div>" +
+        '<div class="acts"><button class="btn small" type="button" data-act="payer" data-id="' + esc(m.id) + '">Payer</button>' +
+        '<button class="btn small soft" type="button" data-act="encaisser" data-id="' + esc(m.id) + '">Encaisser</button>' + rappel + pointer +
+        (m.fiche !== "a_remplir" ? '<button class="btn small ' + (m.fiche === "soumise" ? "" : "soft") + '" type="button" data-act="fiche-voir" data-id="' + esc(m.id) + '">Voir la fiche</button>' : "") +
+        '<button class="btn small ' + (m.propose ? "gold" : "soft") + '" type="button" data-act="certif" data-id="' + esc(m.id) + '">' + (m.certifie ? "Retirer « certifié »" : "Certifier") + "</button>" +
+        (m.a_travaille ? '<button class="btn small ' + (m.bswold_ok ? "soft" : "gold") + '" type="button" data-act="bsw" data-id="' + esc(m.id) + '">' + (m.bswold_ok ? "Activé dans BS WOLD ✓" : "Marquer activé dans BS WOLD") + "</button>" : "") +
+        '<button class="btn small soft" type="button" data-act="ajuster" data-id="' + esc(m.id) + '">Ajuster</button>' +
+        '<button class="btn small soft" type="button" data-act="code" data-id="' + esc(m.id) + '">Nouveau code</button>' +
+        '<button class="btn small soft" type="button" data-act="actif" data-id="' + esc(m.id) + '">' + (m.actif ? "Bloquer" : "Réactiver") + "</button></div></div>";
+    }).join("");
+    return '<h2 class="t" style="margin-top:0">Membres</h2>' +
+      '<div class="due" style="margin-top:0;margin-bottom:12px"><div class="k">Paie de la semaine</div><strong>' + F(total) + ' à payer au total</strong></div>' + afaireHTML() +
+      '<form class="card" data-form="reglages"><strong>Règles et plafonds</strong>' +
+      '<p class="muted sub" style="margin:6px 0 0">Valeur maximale de produits (stock + commandes + argent à verser) qu\'une personne peut avoir chez elle.</p>' +
+      '<label class="lbl" for="g1">Nouveau vendeur (F)</label><input class="field" id="g1" name="nouveau" type="number" inputmode="numeric" min="0" value="' + state.reglages.plafond_nouveau + '" required>' +
+      '<label class="lbl" for="g2">Vendeur certifié (F)</label><input class="field" id="g2" name="certifie" type="number" inputmode="numeric" min="0" value="' + state.reglages.plafond_certifie + '" required>' +
+      '<label class="lbl" for="g3">Délai pour verser l\'argent (heures)</label><input class="field" id="g3" name="delai" type="number" inputmode="numeric" min="1" max="720" value="' + state.reglages.delai_heures + '" required>' +
+      '<p class="muted sub" style="margin:6px 0 0">Au-delà, la personne est en retard et ne peut plus commander.</p>' +
+      '<label class="lbl" for="g4">Ventes versées à temps avant de proposer « certifié »</label><input class="field" id="g4" name="minventes" type="number" inputmode="numeric" min="1" value="' + state.reglages.certif_min_ventes + '" required>' +
+      '<label class="lbl" for="g5">Articles vendus et versés pour « a vraiment travaillé » (activation BS WOLD)</label><input class="field" id="g5" name="travail" type="number" inputmode="numeric" min="1" value="' + state.reglages.travail_min_articles + '" required>' +
+      '<label class="chk"><input type="checkbox" name="fichereq"' + (state.reglages.fiche_obligatoire ? " checked" : "") + '> Fiche obligatoire avant la 1re commande</label>' +
+      '<p class="err" role="alert"></p><button class="btn" type="submit">Enregistrer</button></form>' +
+      '<form class="card" data-form="membre"><strong>Nouvelle personne</strong>' +
+      '<label class="lbl" for="mn">Nom</label><input class="field" id="mn" name="nom" required>' +
+      '<label class="lbl" for="mw">Numéro WhatsApp</label><input class="field" id="mw" name="wa" type="tel" inputmode="tel" placeholder="ex. 0112345678">' +
+      '<p class="err" id="err" role="alert"></p><button class="btn gold" type="submit">Créer et obtenir le code</button></form>' +
+      (rows || '<p class="empty">Aucun membre pour le moment.</p>') +
+      '<h2 class="t">Sauvegarde</h2><div class="card"><p class="muted" style="margin:0 0 4px">Télécharge une copie de toutes tes données (membres, soldes, commandes, ventes, versements, paies). Garde-la dans un endroit sûr, par exemple envoie-la-toi sur WhatsApp.</p>' +
+      '<div class="acts"><button class="btn small" type="button" data-act="backup-json">Sauvegarde complète</button>' +
+      '<button class="btn small soft" type="button" data-act="backup-csv">Soldes (Excel)</button></div></div>';
+  }
+
+  function produitsHTML() {
+    var rows = state.produits.map(function (p) {
+      var thumb = p.photo_url && /^https?:\/\//.test(p.photo_url)
+        ? '<img src="' + esc(p.photo_url) + '" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:14px;flex-shrink:0">'
+        : '<div style="width:72px;height:72px;border-radius:14px;background:#E9E5DC;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted)">SANS PHOTO</div>';
+      return '<div class="card"><div style="display:flex;gap:12px;align-items:center">' + thumb +
+        '<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><strong>' + esc(p.nom) + '</strong><span class="badge ' + (p.actif ? "ok" : "no") + '">' + (p.actif ? "Visible" : "Caché") + "</span></div>" +
+        '<div class="muted sub">' + F(p.prix) + " · commission " + p.commission_pct + " % · gain " + F(Math.floor(p.prix * p.commission_pct / 100)) + "</div></div></div>" +
+        '<div class="acts"><button class="btn small" type="button" data-act="prod-photo" data-id="' + esc(p.id) + '">' + (p.photo_url ? "Changer la photo" : "Ajouter une photo") + "</button>" +
+        '<button class="btn small soft" type="button" data-act="prod-actif" data-id="' + esc(p.id) + '">' + (p.actif ? "Cacher" : "Afficher") + "</button></div></div>";
+    }).join("");
+    return '<h2 class="t" style="margin-top:0">Produits</h2>' +
+      '<form class="card" data-form="produit"><strong>Nouveau produit</strong>' +
+      '<label class="lbl" for="pn">Nom</label><input class="field" id="pn" name="nom" required>' +
+      '<label class="lbl" for="pp">Prix de vente (F)</label><input class="field" id="pp" name="prix" type="number" inputmode="numeric" min="1" required>' +
+      '<label class="lbl" for="pc">Commission du vendeur (%)</label><input class="field" id="pc" name="pct" type="number" inputmode="numeric" min="0" max="100" value="30" required>' +
+      '<label class="lbl" for="pu">Photo du produit (facultatif)</label><input class="field" style="height:auto;padding:12px 14px" id="pu" name="photo" type="file" accept="image/*">' +
+      '<label class="lbl" for="pd">Description (facultatif)</label><textarea class="field" id="pd" name="desc"></textarea>' +
+      '<p class="err" id="err" role="alert"></p><button class="btn gold" type="submit">Ajouter le produit</button></form>' + rows;
+  }
+
+  function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function weekDefaults() {
+    var d = new Date(), k = (d.getDay() + 6) % 7;
+    var mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - k), sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6);
+    return { debut: ymd(mon), fin: ymd(sun) };
+  }
+  function dayStart(s, plus) { var p = s.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2] + (plus || 0)); }
+
+  function annoncesHTML() {
+    var w = weekDefaults(), now = Date.now();
+    var box = "width:72px;height:72px;border-radius:14px;flex-shrink:0;object-fit:cover;background:#141414";
+    var arows = state.annonces.map(function (a) {
+      var m = /^https?:\/\//.test(a.media_url || "") ? a.media_url : null;
+      var thumb = m
+        ? (a.media_type === "video"
+          ? '<video src="' + esc(m) + '#t=0.1" muted playsinline preload="metadata" style="' + box + '"></video>'
+          : '<img src="' + esc(m) + '" alt="" style="' + box.replace("object-fit:cover", "object-fit:" + (a.affichage === "contain" ? "contain" : "cover")) + '">')
+        : '<div style="' + box + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#E2A912">TEXTE</div>';
+      var ended = a.fin_le && new Date(a.fin_le).getTime() < now;
+      var st = ended ? ["Terminée", "no"] : a.actif ? ["En ligne", "ok"] : ["Caché", "no"];
+      return '<div class="card"><div style="display:flex;gap:12px;align-items:center">' + thumb +
+        '<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><strong>' + esc(a.titre) + '</strong><span class="badge ' + st[1] + '">' + st[0] + "</span></div>" +
+        '<div class="muted sub">' + (a.media_type === "video" ? "Vidéo" : a.media_type === "image" ? "Image" : "Texte") + " · " + fdate(a.cree_le) +
+        (a.fin_le ? " · jusqu'au " + fdate(new Date(new Date(a.fin_le).getTime() - 86400000)) : "") + "</div></div></div>" +
+        '<div class="acts"><button class="btn small soft" type="button" data-act="ann-actif" data-id="' + esc(a.id) + '">' + (a.actif ? "Cacher" : "Afficher") + "</button>" +
+        '<button class="btn small soft" type="button" data-act="ann-suppr" data-id="' + esc(a.id) + '">Supprimer</button></div></div>';
+    }).join("");
+    var drows = state.defis.map(function (d) {
+      var won = d.defi_gains && d.defi_gains[0] ? d.defi_gains[0].count : 0;
+      var ended = new Date(d.fin).getTime() < now;
+      var st = !d.actif ? ["Arrêté", "no"] : ended ? ["Période finie", ""] : ["En cours", "ok"];
+      var last = new Date(new Date(d.fin).getTime() - 86400000);
+      return '<div class="card"><div style="display:flex;justify-content:space-between;gap:8px"><strong>' + esc(d.titre) + '</strong><span class="badge ' + st[1] + '">' + st[0] + "</span></div>" +
+        '<div class="muted sub">' + d.objectif + " articles = bonus de " + F(d.bonus) + "<br>Du " + fdate(d.debut) + " au " + fdate(last) + " · " + won + " gagnant(s)</div>" +
+        (d.actif && ended ? '<div class="muted sub" style="margin-top:6px">Encore actif : les ventes de la période comptent dès que l\'argent est reçu. Appuie sur « Arrêter » quand tu as fini.</div>' : "") +
+        '<div class="acts"><button class="btn small soft" type="button" data-act="defi-actif" data-id="' + esc(d.id) + '">' + (d.actif ? "Arrêter" : "Relancer") + "</button></div></div>";
+    }).join("");
+    return '<h2 class="t" style="margin-top:0">Annonces</h2>' +
+      '<p class="muted" style="margin-top:0">Elles défilent en haut du tableau de bord de tous les vendeurs.</p>' +
+      '<form class="card" data-form="annonce"><strong>Nouvelle annonce</strong>' +
+      '<label class="lbl" for="at">Titre</label><input class="field" id="at" name="titre" maxlength="80" required>' +
+      '<label class="lbl" for="ax">Texte (facultatif)</label><textarea class="field" id="ax" name="texte" maxlength="240"></textarea>' +
+      '<label class="lbl" for="am">Image, sticker, GIF ou vidéo (facultatif)</label><input class="field" style="height:auto;padding:12px 14px" id="am" name="media" type="file" accept="image/*,video/mp4,video/webm">' +
+      '<label class="chk"><input type="checkbox" name="entier"> Afficher l\'image en entier (sticker, sans rogner)</label>' +
+      '<label class="lbl" for="af">Date de fin (facultatif)</label><input class="field" id="af" name="fin" type="date">' +
+      '<p class="muted sub" style="margin:10px 0 0">Vidéo : environ 10 secondes, MP4, 8 Mo maximum. Elle se lance sans son.</p>' +
+      '<p class="err" role="alert"></p><button class="btn gold" type="submit">Publier l\'annonce</button></form>' +
+      (arows || '<p class="empty">Aucune annonce pour le moment.</p>') +
+      '<h2 class="t">Défis bonus</h2>' +
+      '<p class="muted" style="margin-top:0">Quand un vendeur atteint l\'objectif, le bonus s\'ajoute tout seul à son solde, une seule fois. Seuls les articles dont tu as reçu l\'argent comptent.</p>' +
+      '<form class="card" data-form="defi"><strong>Nouveau défi</strong>' +
+      '<label class="lbl" for="dt">Titre</label><input class="field" id="dt" name="titre" value="Défi de la semaine" maxlength="80" required>' +
+      '<label class="lbl" for="do">Objectif (articles vendus)</label><input class="field" id="do" name="objectif" type="number" inputmode="numeric" min="1" required>' +
+      '<label class="lbl" for="db">Bonus (F)</label><input class="field" id="db" name="bonus" type="number" inputmode="numeric" min="1" required>' +
+      '<label class="lbl" for="dd">Début</label><input class="field" id="dd" name="debut" type="date" value="' + w.debut + '" required>' +
+      '<label class="lbl" for="de">Dernier jour</label><input class="field" id="de" name="fin" type="date" value="' + w.fin + '" required>' +
+      '<p class="err" role="alert"></p><button class="btn gold" type="submit">Lancer le défi</button></form>' +
+      (drows || '<p class="empty">Aucun défi pour le moment.</p>');
+  }
+
+  var TABS = [["commandes", "Commandes", "box"], ["argent", "Argent", "wallet"], ["membres", "Membres", "user"], ["produits", "Produits", "shop"], ["annonces", "Annonces", "chat"]];
+  function dashHTML() {
+    var body = { commandes: commandesHTML, argent: argentHTML, membres: membresHTML, produits: produitsHTML, annonces: annoncesHTML }[state.tab]();
+    var cnt = { commandes: state.commandes.length, argent: state.versements.length + state.retraits.length };
+    var nav = TABS.map(function (t) {
+      var on = state.tab === t[0];
+      return '<button class="tab' + (on ? " on" : "") + '" type="button" data-act="tab" data-tab="' + t[0] + '"' + (on ? ' aria-current="page"' : "") + ">" + svg(ICON[t[2]], 24) +
+        "<span>" + t[1] + (cnt[t[0]] ? " (" + cnt[t[0]] + ")" : "") + "</span></button>";
+    }).join("");
+    return '<div class="wrap"><main class="pad"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong class="num" style="font-size:20px">Corbeau · Boss</strong>' +
+      '<button class="linkbtn" type="button" data-act="refresh">Actualiser</button> <button class="linkbtn" type="button" data-act="logout">Déconnexion</button></div>' + body +
+      '</main><nav class="tabs" aria-label="Navigation du bureau">' + nav + "</nav></div>";
+  }
+
+  function render() {
+    $("#app").innerHTML = state.view === "login" ? loginHTML(false) : state.view === "refus" ? loginHTML(true) : dashHTML();
+  }
+
+  /* ---------- fenêtre ---------- */
+  function openSheet(html) { var s = $("#sheet"); $(".sheet-body", s).innerHTML = html; s.hidden = false; document.body.style.overflow = "hidden"; }
+  function closeSheet() { $("#sheet").hidden = true; document.body.style.overflow = ""; }
+  function codeSheet(nom, wa, code) {
+    var site = location.origin + "/";
+    var text = "Bonjour " + nom + ", voici ton code d'accès Corbeau : " + code + "\nOuvre " + site + " et tape ce code une seule fois.";
+    var num = intl(wa);
+    openSheet("<h3>Code d'accès de " + esc(nom) + '</h3><p class="muted" style="margin:0">Montre-le maintenant : il ne sera plus affiché. Tu pourras en générer un nouveau.</p>' +
+      '<div class="big" id="bigcode">' + esc(code) + "</div>" +
+      '<button class="btn soft" type="button" data-act="copy" data-code="' + esc(code) + '">Copier le code</button><div style="height:10px"></div>' +
+      '<a class="btn gold" target="_blank" rel="noopener" href="https://wa.me/' + num + "?text=" + encodeURIComponent(text) + '">' + svg(ICON.chat) + " Envoyer sur WhatsApp</a>");
+  }
+
+  /* ---------- actions ---------- */
+  async function run(p, ok) {
+    var r = await p;
+    if (r.error) { toast(msg(r.error)); return false; }
+    if (ok) toast(ok);
+    await loadAll(); render();
+    return true;
+  }
+  function find(list, id) { return list.filter(function (x) { return x.id === id; })[0]; }
+  function askAmount(txt, def) {
+    var v = parseInt(prompt(txt, def == null ? "" : String(def)), 10);
+    return v && v !== 0 ? v : null;
+  }
+
+  /* photos : réduites sur le téléphone (1000 px max) avant l'envoi */
+  function compress(file, max, png) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var k = Math.min(1, (max || 1000) / Math.max(img.width, img.height));
+        var c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+        var g = c.getContext("2d"); if (!png) { g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); } g.drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(function (b) { if (b) resolve(b); else reject(new Error("Image illisible.")); }, png ? "image/png" : "image/jpeg", 0.82);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("Image illisible. Choisis une photo JPG ou PNG.")); };
+      img.src = url;
+    });
+  }
+  async function uploadPhoto(file) {
+    var blob = await compress(file);
+    var name = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(16).slice(2)) + ".jpg";
+    var r = await sb.storage.from("produits").upload(name, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
+    if (r.error) throw r.error;
+    return sb.storage.from("produits").getPublicUrl(name).data.publicUrl;
+  }
+
+  var MAX_MO = 8;
+  function uid() { return window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now() + "-" + Math.random().toString(16).slice(2); }
+  /* médias des annonces : images réduites ; vidéos, GIF et stickers animés envoyés tels quels (8 Mo max) */
+  async function uploadMedia(file) {
+    var t = file.type || "", isVideo = /^video\//.test(t), isImg = /^image\//.test(t), blob = file, ext, ctype = t;
+    if (!isVideo && !isImg) throw new Error("Choisis une image ou une vidéo.");
+    var big = file.size > MAX_MO * 1048576;
+    if (isVideo) {
+      if (!/^video\/(mp4|webm)$/.test(t)) throw new Error("Vidéo refusée : utilise le format MP4.");
+      if (big) throw new Error("Vidéo trop lourde (" + (file.size / 1048576).toFixed(1) + " Mo). Maximum " + MAX_MO + " Mo : raccourcis-la à environ 10 secondes.");
+      ext = t === "video/webm" ? "webm" : "mp4";
+    } else if (t === "image/gif" || t === "image/webp") {
+      if (big) throw new Error("Image trop lourde (" + (file.size / 1048576).toFixed(1) + " Mo). Maximum " + MAX_MO + " Mo.");
+      ext = t === "image/gif" ? "gif" : "webp";
+    } else {
+      var png = t === "image/png";
+      blob = await compress(file, 1200, png);
+      ext = png ? "png" : "jpg"; ctype = png ? "image/png" : "image/jpeg";
+    }
+    var name = uid() + "." + ext;
+    var r = await sb.storage.from("annonces").upload(name, blob, { contentType: ctype, cacheControl: "31536000" });
+    if (r.error) throw r.error;
+    return { url: sb.storage.from("annonces").getPublicUrl(name).data.publicUrl, type: isVideo ? "video" : "image" };
+  }
+  async function fetchAll(table, cols) {
+    var out = [], from = 0;
+    for (;;) {
+      var r = await sb.from(table).select(cols).range(from, from + 999);
+      if (r.error) throw r.error;
+      var d = r.data || [];
+      out = out.concat(d);
+      if (d.length < 1000) break;
+      from += 1000;
+    }
+    return out;
+  }
+  function download(name, text, mime) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }
+  function ferr(f, t) { var e = f.querySelector(".err"); if (e) e.textContent = t || ""; }
+
+  var acts = {
+    tab: function (el) { state.tab = el.dataset.tab; render(); },
+    "ann-actif": function (el) {
+      var a = find(state.annonces, el.dataset.id); if (!a) return;
+      run(sb.from("annonces").update({ actif: !a.actif }).eq("id", a.id), a.actif ? "Annonce cachée." : "Annonce en ligne.");
+    },
+    "ann-suppr": async function (el) {
+      var a = find(state.annonces, el.dataset.id); if (!a) return;
+      if (!confirm("Supprimer cette annonce pour de bon ?")) return;
+      var nm = a.media_url && a.media_url.split("/annonces/")[1];
+      if (nm) { try { await sb.storage.from("annonces").remove([nm.split("?")[0]]); } catch (e) {} }
+      run(sb.from("annonces").delete().eq("id", a.id), "Annonce supprimée.");
+    },
+    "defi-actif": async function (el) {
+      var d = find(state.defis, el.dataset.id); if (!d) return;
+      var r = await sb.from("defis").update({ actif: !d.actif }).eq("id", d.id);
+      if (r.error) { toast(msg(r.error)); return; }
+      if (!d.actif) await sb.rpc("admin_verifier_defis");
+      toast(d.actif ? "Défi arrêté." : "Défi relancé."); await loadAll(); render();
+    },
+    "prod-photo": function (el) { state.pickFor = el.dataset.id; var p = $("#pick"); p.value = ""; p.click(); },
+    close: closeSheet,
+    refresh: async function () { await loadAll(); render(); toast("Mis à jour."); },
+    logout: async function () { await sb.auth.signOut(); state.view = "login"; render(); },
+    "cmd-ok": function (el) { if (confirm("Tu as bien remis ces produits ? Ils entrent dans le stock de la personne.")) run(sb.rpc("admin_traiter_commande", { p_id: el.dataset.id, p_livrer: true }), "Commande livrée, stock mis à jour."); },
+    "cmd-no": function (el) { if (confirm("Annuler cette commande ?")) run(sb.rpc("admin_traiter_commande", { p_id: el.dataset.id, p_livrer: false }), "Commande annulée."); },
+    "ver-ok": function (el) {
+      var v = find(state.versements, el.dataset.id); if (!v) return;
+      if (confirm("Tu as bien reçu " + F(v.montant) + " ? Le gain du vendeur sera ajouté à son solde.")) run(sb.rpc("admin_confirmer_versement", { p_id: v.id, p_ok: true }), "Versement reçu, gain ajouté.");
+    },
+    "ver-no": function (el) { if (confirm("Tu n'as pas reçu cet argent ?")) run(sb.rpc("admin_confirmer_versement", { p_id: el.dataset.id, p_ok: false }), "Versement refusé."); },
+    "ret-ok": function (el) { if (confirm("Confirmer que tu as envoyé l'argent ? Le montant sera retiré du solde.")) run(sb.rpc("admin_traiter_retrait", { p_id: el.dataset.id, p_payer: true }), "Retrait marqué payé."); },
+    "ret-no": function (el) { if (confirm("Refuser ce retrait ?")) run(sb.rpc("admin_traiter_retrait", { p_id: el.dataset.id, p_payer: false }), "Retrait refusé."); },
+    payer: function (el) {
+      var m = find(state.membres, el.dataset.id); if (!m) return;
+      var v = askAmount("Montant que tu paies à " + m.nom + " (en F). Son solde : " + m.solde, Math.max(0, m.solde));
+      if (v && v > 0) run(sb.rpc("admin_mouvement", { p_membre: m.id, p_montant: v, p_type: "paiement", p_note: "Paiement de la semaine" }), "Paiement enregistré.");
+    },
+    encaisser: function (el) {
+      var m = find(state.membres, el.dataset.id); if (!m) return;
+      if (m.du <= 0) { toast(m.nom + " n'a rien à verser."); return; }
+      var v = askAmount("Montant reçu de " + m.nom + " (en F). Il doit verser : " + m.du, m.du);
+      if (v && v > 0) run(sb.rpc("admin_enregistrer_versement", { p_membre: m.id, p_montant: v }), "Versement enregistré, gain ajouté.");
+    },
+    ajuster: function (el) {
+      var m = find(state.membres, el.dataset.id); if (!m) return;
+      var v = askAmount("Ajustement pour " + m.nom + " (en F). Positif pour ajouter, négatif pour retirer.");
+      if (v) run(sb.rpc("admin_mouvement", { p_membre: m.id, p_montant: v, p_type: "ajustement", p_note: "Ajustement du boss" }), "Solde ajusté.");
+    },
+    code: async function (el) {
+      var m = find(state.membres, el.dataset.id); if (!m) return;
+      if (!confirm("Créer un nouveau code pour " + m.nom + " ? L'ancien code ne marchera plus.")) return;
+      var r = await sb.rpc("admin_regenerer_code", { p_membre: m.id });
+      if (r.error) { toast(msg(r.error)); return; }
+      codeSheet(m.nom, m.whatsapp, r.data);
+    },
+    actif: function (el) {
+      var m = find(state.membres, el.dataset.id); if (!m) return;
+      run(sb.rpc("admin_activer_membre", { p_membre: m.id, p_actif: !m.actif }), m.actif ? "Membre bloqué." : "Membre réactivé.");
+    },
+    "fiche-voir": async function (el) {
+      var m = find(state.membres, el.dataset.id), f = state.fiches[el.dataset.id]; if (!m || !f) return;
+      var st = { soumise: "À vérifier", verifiee: "Vérifiée", refusee: "Refusée" }[f.statut] || f.statut;
+      var gnum = intl(f.garant_tel);
+      openSheet("<h3>Fiche de " + esc(m.nom) + '</h3><p class="muted" style="margin:0">Statut : ' + st + "</p>" +
+        '<div class="card" style="margin-top:12px"><div class="sum" style="border-top:0"><span>Élève</span><strong>' + (f.eleve ? "Oui" : "Non") + "</strong></div>" +
+        (f.eleve ? '<div class="sum" style="border-top:0"><span>École</span><strong>' + esc(f.ecole || "") + '</strong></div><div class="sum" style="border-top:0"><span>Classe</span><strong>' + esc(f.classe || "") + "</strong></div>" : "") +
+        '<div class="sum" style="border-top:0"><span>Garant</span><strong>' + esc(f.garant_nom) + (f.garant_lien ? " (" + esc(f.garant_lien) + ")" : "") + "</strong></div>" +
+        '<div class="sum" style="border-top:0"><span>Téléphone</span><strong>' + esc(f.garant_tel) + "</strong></div></div>" +
+        '<div id="piece" class="muted" style="text-align:center;padding:12px 0">Chargement de la photo…</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">' + (gnum ? '<a class="btn small soft" href="tel:+' + esc(gnum) + '">Appeler le garant</a>' : "") + "</div>" +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn small gold" type="button" data-act="fiche-ok" data-id="' + esc(m.id) + '">Vérifiée</button>' +
+        '<button class="btn small soft" type="button" data-act="fiche-no" data-id="' + esc(m.id) + '">Refuser</button></div>');
+      try {
+        var r = await sb.storage.from("pieces").createSignedUrl(f.piece, 300);
+        if (r.error) throw r.error;
+        var box = $("#piece"); if (box) box.innerHTML = '<img src="' + esc(r.data.signedUrl) + '" alt="Carte" style="max-width:100%;border-radius:14px">';
+      } catch (e) { var b2 = $("#piece"); if (b2) b2.textContent = "Photo introuvable."; }
+    },
+    "fiche-ok": function (el) { closeSheet(); run(sb.rpc("admin_verifier_fiche", { p_membre: el.dataset.id, p_ok: true }), "Fiche vérifiée."); },
+    "fiche-no": function (el) {
+      if (!confirm("Refuser cette fiche ? La personne devra la corriger avant de commander.")) return;
+      closeSheet(); run(sb.rpc("admin_verifier_fiche", { p_membre: el.dataset.id, p_ok: false }), "Fiche refusée.");
+    },
+    bsw: function (el) {
+      var m = find(state.membres, el.dataset.id); if (!m) return;
+      var q = m.bswold_ok ? "Retirer la coche « activé dans BS WOLD » ?" : "Confirme : tu as activé " + m.nom + " dans BS WOLD (onglet Activation) ?";
+      if (confirm(q)) run(sb.rpc("admin_marquer_bswold", { p_membre: m.id, p_oui: !m.bswold_ok }), m.bswold_ok ? "Coche retirée." : "Noté : activé dans BS WOLD.");
+    },
+    certif: function (el) {
+      var m = find(state.membres, el.dataset.id); if (!m) return;
+      var q = m.certifie ? "Retirer le niveau « certifié » à " + m.nom + " ? Son plafond redescend." : "Certifier " + m.nom + " ? Son plafond de marchandise monte à " + F(state.reglages.plafond_certifie) + ".";
+      if (confirm(q)) run(sb.rpc("admin_certifier", { p_membre: m.id, p_oui: !m.certifie }), m.certifie ? "Niveau retiré." : m.nom + " est certifié.");
+    },
+    "backup-json": async function (el) {
+      el.disabled = true; toast("Préparation de la sauvegarde…");
+      try {
+        var T = { membres: "id,nom,whatsapp,actif,cree_le,certifie,liv_tel,liv_quartier,liv_repere,liv_lat,liv_lng" };
+        ["produits", "commandes", "ventes", "versements", "mouvements", "retraits", "defis", "defi_gains", "annonces", "reglages", "verifications", "pointages"].forEach(function (t) { T[t] = "*"; });
+        var out = { sauvegarde_du: new Date().toISOString() };
+        for (var t in T) out[t] = await fetchAll(t, T[t]);
+        download("corbeau-sauvegarde-" + ymd(new Date()) + ".json", JSON.stringify(out, null, 1), "application/json");
+        toast("Sauvegarde téléchargée.");
+      } catch (e) { toast(msg(e)); }
+      el.disabled = false;
+    },
+    "backup-csv": function () {
+      var q = function (v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; };
+      var lines = [["Nom", "WhatsApp", "Niveau", "Etat", "Solde a payer", "Doit verser", "Stock"].join(";")].concat(state.membres.map(function (m) {
+        return [q(m.nom), q(m.whatsapp), q(m.certifie ? "Certifie" : "Nouveau"), q(m.actif ? "Actif" : "Bloque"), m.solde, m.du, m.stock].join(";");
+      }));
+      download("corbeau-soldes-" + ymd(new Date()) + ".csv", "\ufeff" + lines.join("\r\n"), "text/csv;charset=utf-8");
+      toast("Fichier téléchargé.");
+    },
+    "prod-actif": function (el) {
+      var p = find(state.produits, el.dataset.id); if (!p) return;
+      run(sb.from("produits").update({ actif: !p.actif }).eq("id", p.id), p.actif ? "Produit caché." : "Produit affiché.");
+    },
+    copy: async function (el) {
+      try { await navigator.clipboard.writeText(el.dataset.code); toast("Code copié."); } catch (e) { toast("Copie impossible, recopie à la main."); }
+    }
+  };
+
+  var forms = {
+    login: async function (f) {
+      busy(f, true); setErr("");
+      var r = await sb.auth.signInWithPassword({ email: f.elements.email.value.trim(), password: f.elements.pw.value });
+      if (r.error) { setErr("Email ou mot de passe incorrect."); busy(f, false); return; }
+      await start();
+    },
+    reglages: async function (f) {
+      busy(f, true); ferr(f, "");
+      var r = await sb.from("reglages").update({
+        plafond_nouveau: parseInt(f.elements.nouveau.value, 10), plafond_certifie: parseInt(f.elements.certifie.value, 10),
+        delai_heures: parseInt(f.elements.delai.value, 10), certif_min_ventes: parseInt(f.elements.minventes.value, 10), fiche_obligatoire: f.elements.fichereq.checked,
+        travail_min_articles: parseInt(f.elements.travail.value, 10)
+      }).eq("id", 1);
+      if (r.error) { ferr(f, msg(r.error)); busy(f, false); return; }
+      toast("Règles enregistrées."); await loadAll(); render();
+    },
+    membre: async function (f) {
+      busy(f, true); setErr("");
+      var nom = f.elements.nom.value.trim(), wa = f.elements.wa.value.trim();
+      var r = await sb.rpc("admin_creer_membre", { p_nom: nom, p_whatsapp: wa });
+      if (r.error) { setErr(msg(r.error)); busy(f, false); return; }
+      await loadAll(); render(); codeSheet(nom, wa, r.data);
+    },
+    annonce: async function (f) {
+      busy(f, true); ferr(f, "");
+      try {
+        var file = f.elements.media.files[0], up = file ? await uploadMedia(file) : null;
+        var fin = f.elements.fin.value ? dayStart(f.elements.fin.value, 1).toISOString() : null;
+        var r = await sb.from("annonces").insert({
+          titre: f.elements.titre.value.trim(), texte: f.elements.texte.value.trim() || null,
+          media_url: up ? up.url : null, media_type: up ? up.type : null,
+          affichage: f.elements.entier.checked ? "contain" : "cover", fin_le: fin
+        });
+        if (r.error) throw r.error;
+      } catch (e) { ferr(f, msg(e)); busy(f, false); return; }
+      toast("Annonce publiée."); await loadAll(); render();
+    },
+    defi: async function (f) {
+      busy(f, true); ferr(f, "");
+      var debut = dayStart(f.elements.debut.value), fin = dayStart(f.elements.fin.value, 1);
+      if (!(fin > debut)) { ferr(f, "Le dernier jour doit être après le début."); busy(f, false); return; }
+      var r = await sb.from("defis").insert({
+        titre: f.elements.titre.value.trim(), objectif: parseInt(f.elements.objectif.value, 10), bonus: parseInt(f.elements.bonus.value, 10),
+        debut: debut.toISOString(), fin: fin.toISOString()
+      });
+      if (r.error) { ferr(f, msg(r.error)); busy(f, false); return; }
+      await sb.rpc("admin_verifier_defis");
+      toast("Défi lancé."); await loadAll(); render();
+    },
+    produit: async function (f) {
+      busy(f, true); setErr("");
+      try {
+        var file = f.elements.photo.files[0], desc = f.elements.desc.value.trim();
+        var photo = file ? await uploadPhoto(file) : null;
+        var r = await sb.from("produits").insert({
+          nom: f.elements.nom.value.trim(), prix: parseInt(f.elements.prix.value, 10), commission_pct: parseInt(f.elements.pct.value, 10),
+          photo_url: photo, description: desc || null
+        });
+        if (r.error) throw r.error;
+      } catch (e) { setErr(msg(e)); busy(f, false); return; }
+      toast("Produit ajouté."); await loadAll(); render();
+    }
+  };
+
+  document.addEventListener("click", function (e) {
+    if (e.target.id === "sheet") { closeSheet(); return; }
+    var el = e.target.closest("[data-act]");
+    if (el && acts[el.dataset.act]) acts[el.dataset.act](el);
+  });
+  document.addEventListener("change", async function (e) {
+    if (e.target.id !== "pick" || !e.target.files[0] || !state.pickFor) return;
+    var id = state.pickFor; state.pickFor = null;
+    toast("Envoi de la photo…");
+    try {
+      var url = await uploadPhoto(e.target.files[0]);
+      await run(sb.from("produits").update({ photo_url: url }).eq("id", id), "Photo mise à jour.");
+    } catch (err) { toast(msg(err)); }
+  });
+  document.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var f = e.target;
+    if (forms[f.dataset.form]) forms[f.dataset.form](f);
+  });
+
+  async function start() {
+    var r = await sb.rpc("is_admin");
+    if (r.error || r.data !== true) { state.view = "refus"; render(); return; }
+    await loadAll();
+    state.view = "dash";
+    render();
+  }
+
+  (async function init() {
+    var s = await sb.auth.getSession();
+    if (s.data && s.data.session) await start(); else render();
+  })();
+})();
+</script>
+</body>
+</html>
